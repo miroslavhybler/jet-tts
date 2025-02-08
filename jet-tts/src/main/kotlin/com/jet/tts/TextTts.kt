@@ -1,6 +1,5 @@
 package com.jet.tts
 
-import android.util.Log
 import androidx.annotation.Keep
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.material3.LocalTextStyle
@@ -30,8 +29,18 @@ import androidx.compose.ui.unit.TextUnit
 
 
 /**
+ * Basic implementation of [Text] with text highlight feature. Plain [Utterance.content] is styled
+ * by [highlightText].
+ * @param text Text to be displayed and highlighted by [TtsClient.highlightMode].
+ * @param utteranceId Unique identifier of the utterance. When text displayed is not for the current
+ * utterance, text will not be highlighted. **Make sure [utteranceId] matched with one passed in
+ * [TtsClient.speak].
+ * @param ttsClient [TtsClient] used for [android.speech.tts.TextToSpeech] feature.
+ * @param highlightStyle [TextStyle] used for highlighting text.
+ * @see [Text] for other parameters docs.
  * @author Miroslav Hýbler <br>
  * created on 04.02.2025
+ * @since 1.0.0
  */
 @Composable
 @Keep
@@ -90,15 +99,26 @@ fun TextTts(
 
 
 /**
+ * Basic implementation of [Text] with text highlight feature. Plain [Utterance.content] is styled
+ * by [highlightText].
+ * @param text Text to be displayed and highlighted by [TtsClient.highlightMode].
+ * @param utteranceId Unique identifier of the utterance. When text displayed is not for the current
+ * utterance, text will not be highlighted. **Make sure [utteranceId] matched with one passed in
+ * [TtsClient.speak].
+ * @param range Range of the text to be highlighted.
+ * @param highlightStyle [TextStyle] used for highlighting text.
+ * @see [Text] for other parameters docs.
  * @author Miroslav Hýbler <br>
  * created on 04.02.2025
+ * @since 1.0.0
  */
 @Composable
+@Keep
 fun TextTts(
     modifier: Modifier = Modifier,
     text: String,
-    range: UtteranceProgress,
     utteranceId: String,
+    range: UtteranceProgress,
     highlightStyle: TextStyle = LocalTextStyle.current.copy(
         color = MaterialTheme.colorScheme.primary,
     ),
@@ -123,7 +143,7 @@ fun TextTts(
 
     var innerText: AnnotatedString by remember {
         mutableStateOf(
-            value = buildTextWithRange(
+            value = highlightText(
                 text = text,
                 range = range,
                 highlightStyle = highlightStyle,
@@ -134,7 +154,7 @@ fun TextTts(
     }
 
     LaunchedEffect(key1 = text, key2 = range) {
-        innerText = buildTextWithRange(
+        innerText = highlightText(
             text = text,
             range = range,
             highlightStyle = highlightStyle,
@@ -167,7 +187,17 @@ fun TextTts(
 }
 
 
-private fun buildTextWithRange(
+/**
+ * @param text Text to be annotated by [TtsClient.highlightMode].
+ * @param range Range of the text to be highlighted.
+ * @param normalStyle Style of the text that is not highlighted.
+ * @param highlightStyle Style of the text that is highlighted.
+ * @param utteranceId Unique identifier of the utterance. When text displayed is not for the current
+ * utterance, text will not be highlighted.
+ * @return Annotated string with highlighted text.
+ * @since 1.0.0
+ */
+private fun highlightText(
     text: String,
     range: UtteranceProgress,
     normalStyle: TextStyle,
@@ -176,24 +206,16 @@ private fun buildTextWithRange(
 ): AnnotatedString {
     val normalSpanStyle = normalStyle.toSpanStyle()
     if (range == IntRange.EMPTY || utteranceId != range.utteranceId) {
+        //Range is empty or text is not for the current utterance. When utteranceId doesn't match,
+        //it means that TTs client is probably speaking another utterance now.
+
         return buildAnnotatedString {
             withStyle(style = normalSpanStyle) {
                 append(text = text)
             }
         }
     }
-
     val highlightSpanStyle = highlightStyle.toSpanStyle()
-
-    /*
-    if (range.last == text.length) {
-        return buildAnnotatedString {
-            withStyle(style = highlightSpanStyle) {
-                append(text = text.substring(startIndex = 0, endIndex = range.last))
-            }
-        }
-    }
-    */
 
     return buildAnnotatedString {
         if (range.first > 0) {
@@ -202,6 +224,7 @@ private fun buildTextWithRange(
             }
         }
         withStyle(style = highlightSpanStyle) {
+            //Appending text that should be highlighted
             append(text = text.substring(startIndex = range.first, endIndex = range.last))
         }
 

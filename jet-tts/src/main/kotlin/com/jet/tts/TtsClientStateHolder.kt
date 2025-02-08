@@ -16,8 +16,15 @@ import androidx.core.os.bundleOf
 
 
 /**
+ * Helper class used for saving/restoring state of [TtsClient] when composable is disposed.
+ * @param utteranceId Unique identifier of the current utterance.
+ * @param startIndex Inclusive start index of the first character of the current utterance.
+ * @param endIndex Exclusive end index of the last character of the current utterance.
+ * @param isSpeaking Flag indicating if [TtsClient] was speaking when state was saved.
+ * @param map Map of [Utterance]s addee to the [TtsClient].
  * @author Miroslav Hýbler <br>
  * created on 05.02.2025
+ * @since 1.0.0
  */
 @Keep
 internal data class TtsClientStateHolder internal constructor(
@@ -28,12 +35,20 @@ internal data class TtsClientStateHolder internal constructor(
     var map: Map<String, Utterance> = emptyMap(),
 ) {
 
+    /**
+     * Flag indicating if state is empty.
+     * @since 1.0.0
+     */
     internal val isEmpty: Boolean
         get() = utteranceId == ""
                 && startIndex == 0
                 && endIndex == 0
 
 
+    /**
+     * Captures current state of [TtsClient] and saves to be saved lated by [Saver].
+     * @since 1.0.0
+     */
     internal fun captureState(client: TtsClient) {
         this.utteranceId = client.currentUtteranceId
         this.startIndex = client.currentStartIndex
@@ -43,6 +58,10 @@ internal data class TtsClientStateHolder internal constructor(
     }
 
 
+    /**
+     * Saver used for saving/restoring state of [TtsClient] using [com.jet.tts.TtsClientStateHolder].
+     * @since 1.0.0
+     */
     object Saver : androidx.compose.runtime.saveable.Saver<TtsClientStateHolder, Bundle> {
         override fun SaverScope.save(state: TtsClientStateHolder): Bundle {
             return bundleOf(

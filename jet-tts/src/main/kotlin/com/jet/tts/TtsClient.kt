@@ -22,8 +22,17 @@ import java.util.Locale
 
 
 /**
+ * Simple client class to use [TextToSpeech] feature. Take a look at [Dev blog](https://android-developers.googleblog.com/2009/09/introduction-to-text-to-speech-in.html)
+ * to understand how [TextToSpeech] works.
+ * Use [rememberTtsClient] to get an instance of [com.jet.tts.TtsClient].
+ * @param context [Context] required for [TextToSpeech] initialization.
+ * @param highlightMode Specifies how the text it [TextTts] will be highlighted.
+ * @param stateHolder Helper variable to store state of [TtsClient].
+ * @param onInitialized Callback to be called when [TextToSpeech] is initialized.
+ * @param coroutineScope [CoroutineScope] used for waiting until TTS engine is initialized.
  * @author Miroslav Hýbler <br>
  * created on 04.02.2025
+ * @since 1.0.0
  */
 @Stable
 @Keep
@@ -35,21 +44,44 @@ public class TtsClient internal constructor(
     private val coroutineScope: CoroutineScope,
 ) {
 
+    /**
+     * Specifies how the text it [TextTts] will be highlighted.
+     * @since 1.0.0
+     */
     public enum class HighlightMode {
+
+        /**
+         * Mode to highlight only the spoken word out of the spoken content.
+         */
         SPOKEN_WORD,
+
+        /**
+         * Mode to highlight the spoken range from the beginning of the content until currently
+         * spoken word.
+         */
         SPOKEN_RANGE_FROM_BEGINNING;
     }
 
+    /**
+     * Deferred used for waiting until TTS engine is initialized.
+     * @since 1.0.0
+     */
     private val initDeferred = CompletableDeferred<Boolean>()
 
 
+    /**
+     * Listener used for listening TextToSpeach initialization
+     * @since 1.0.0
+     */
     private val initListener: TextToSpeech.OnInitListener = object : TextToSpeech.OnInitListener {
         override fun onInit(status: Int) {
             when (status) {
                 TextToSpeech.SUCCESS -> {
-                    onTtsInitialized()
-                    onInitialized(this@TtsClient)
+                    Log.d("TtsClient", "onTtsInitialized()")
+                    tts.setOnUtteranceProgressListener(utteranceProgressListener)
+                    isInitialized = true
                     initDeferred.complete(value = true)
+                    onInitialized(this@TtsClient)
                 }
 
                 TextToSpeech.ERROR -> {
@@ -66,6 +98,10 @@ public class TtsClient internal constructor(
     }
 
 
+    /**
+     * Listener used for listening to utterance progress to update [utteranceRange], [currentUtteranceId]
+     * @since 1.0.0
+     */
     private val utteranceProgressListener: UtteranceProgressListener =
         object : UtteranceProgressListener() {
             override fun onRangeStart(
@@ -77,7 +113,7 @@ public class TtsClient internal constructor(
                 val utterance = contentMap[utteranceId] ?: return
                 currentStartIndex = start
                 currentEndIndex = end
-            //    Log.d("TtsClient", "onRangeStart: $utteranceId $start - $end")
+                //    Log.d("TtsClient", "onRangeStart: $utteranceId $start - $end")
                 mUtteranceRange.value = UtteranceProgress(
                     range = getRange(
                         start = start,
@@ -114,22 +150,66 @@ public class TtsClient internal constructor(
         }
 
 
+    /**
+     * TextToSpeech instance used for speaking.
+     * @since 1.0.0
+     */
     private val tts = TextToSpeech(context, initListener)
 
 
+    /**
+     * Flag indicating if [TtsClient] is initialized. Do not use check directly, use [waitUntilInitialized] which
+     * is using [initDeferred] for waiting until TTS engine is initialized and calling required
+     * action afterwards.
+     * @since 1.0.0
+     */
     private var isInitialized: Boolean = false
 
+    /**
+     * Map of [Utterance]s added by [speak].
+     * @since 1.0.0
+     */
     internal var contentMap: HashMap<String, Utterance> = hashMapOf()
         private set
 
+
+    /**
+     * Flag indicating if [TtsClient] is currently speaking. Using [androidx.compose.runtime.MutableState] so
+     * it's safe to use it in compose code, e.g.
+     * ```kotlin
+     * Button(
+     *      onClick = {
+     *      if(!client.isSpeaking) {
+     *          client.speak(text = "Hello World", utteranceId = "greeting")
+     *      } else {
+     *          client.stop()
+     *      }
+     * ) {
+     *     Text(text= if (client.isSpeaking) "Stop" else "Speak")
+     * }
+     * ```
+     */
     public var isSpeaking: Boolean by mutableStateOf(value = false)
         private set
 
+
+    /**
+     * Unique identifier of the current utterance.
+     */
     public var currentUtteranceId: String by mutableStateOf(value = "")
         private set
 
+    /**
+     * Range of text to highlight. Use [utteranceRange] to collect updates.
+     * @since 1.0.0
+     */
     private val mUtteranceRange: MutableStateFlow<UtteranceProgress> =
         MutableStateFlow(value = UtteranceProgress.EMPTY)
+
+    /**
+     * Range of text to highlight, collected by [TextTts]
+     * @since 1.0.0
+     */
     val utteranceRange: StateFlow<UtteranceProgress> get() = mUtteranceRange.asStateFlow()
 
 
@@ -144,6 +224,11 @@ public class TtsClient internal constructor(
     }
 
 
+    /**
+     * Sets language of [TextToSpeech] by given [Locale] if it's supported.
+     * @param language [Locale] Language to set.
+     * @since 1.0.0
+     */
     public fun setLanguage(language: Locale): Unit {
         waitUntilInitialized {
             val availability = tts.isLanguageAvailable(language)
@@ -153,10 +238,21 @@ public class TtsClient internal constructor(
             }
             tts.language = language
         }
-
     }
 
 
+    /**
+     * @param text Text to be spoken.
+     * @param utteranceId Unique identifier of the utterance. This is required since without [utteranceId],
+     * [UtteranceProgressListener] would not be called and text highlight feature would not work.
+     * @param queueMode Queue mode of [TextToSpeech], can be [TextToSpeech.QUEUE_FLUSH] to replace
+     * current utterance (If there is some) with a new one or [TextToSpeech.QUEUE_ADD] to add a new
+     * utterance to the queue.
+     * @param params Parameters for the request. Can be null. See [TextToSpeech.speak] for more
+     * details.
+     * @param startIndex Index of the first character of the current utterance.
+     * @since 1.0.0
+     */
     public fun speak(
         text: String,
         utteranceId: String,
@@ -165,14 +261,20 @@ public class TtsClient internal constructor(
         startIndex: Int = 0,
     ): Unit {
         if (text.isBlank()) {
+            //Blank text will not be passed because there is nothing to speak.
             return
         }
 
         waitUntilInitialized {
+            if (queueMode == TextToSpeech.QUEUE_FLUSH) {
+                //Queue flush requested, we have to clear all previous utterances.
+                contentMap.clear()
+            }
+
             contentMap[utteranceId] = Utterance(
                 utteranceId = utteranceId,
                 content = text,
-                currentThreshold = startIndex,
+                currentIndexThreshold = startIndex,
                 sequence = contentMap.size,
             )
             val actualTextToBeSpoken: String = text.toSubstring(startIndex = startIndex)
@@ -183,6 +285,10 @@ public class TtsClient internal constructor(
     }
 
 
+    /**
+     * Stops currently speaking text.
+     * @since 1.0.0
+     */
     public fun stop(): Unit {
         Log.d("TtsClient", "stop()")
         waitUntilInitialized {
@@ -193,6 +299,10 @@ public class TtsClient internal constructor(
     }
 
 
+    /**
+     * Releases resources. Call this when you know your application will no longer use [TextToSpeech].
+     * @since 1.0.0
+     */
     public fun release(): Unit {
         Log.d("TtsClient", "release()")
         tts.stop()
@@ -201,21 +311,40 @@ public class TtsClient internal constructor(
     }
 
 
+    /**
+     * Stops currently speaking text in [androidx.compose.runtime.DisposableEffect] and releases resources.
+     * This is used instead of [stop] to capture [isSpeaking] state properly.
+     */
     internal fun stopOnDispose(): Unit {
         Log.d("TtsClient", "stopOnDispose()")
         stateHolder.captureState(client = this)
-        tts.stop()
-        tts.shutdown()
+        release()
     }
 
 
+    /**
+     * Util function to speak an utterance starting from a given [startIndex]. Uses combination of
+     * [startIndex] and [Utterance.currentIndexThreshold] to keep text highlighting consistent.
+     *
+     * #### Why is [Utterance.currentIndexThreshold] needed
+     * * When navigating to [startIndex], [Utterance.currentIndexThreshold] is set to [startIndex] and
+     * [TextToSpeech]'s queue is flushed with `substring(startIndex)` of current [Utterance.content].
+     * * Substring is passed so [utteranceProgressListener] will return `start` and `end` values
+     * relative to the new substring (instead of original [Utterance.content]).
+     * * This would break text highlighting so [getRange] used stored [Utterance.currentIndexThreshold]
+     * to set highlight text range correctly relevant to [Utterance.content] (because on the UI
+     * full content of utterance is visible).
+     * @param utteranceId Id of utterance to be spoken, must be in [contentMap].
+     * @param startIndex Index of the first character of the current utterance.
+     * @since 1.0.0
+     */
     internal fun navigateInUtterance(
         utteranceId: String,
         startIndex: Int,
     ): Unit {
         val utterance = contentMap[utteranceId] ?: return
         val text = utterance.content
-        utterance.currentThreshold = startIndex
+        utterance.currentIndexThreshold = startIndex
 
         waitUntilInitialized {
             val ssmlFormat: String = text.toSubstring(startIndex = startIndex)
@@ -227,6 +356,10 @@ public class TtsClient internal constructor(
     }
 
 
+    /**
+     * Restores state of [TtsClient] from saved [TtsClientStateHolder].
+     * @since 1.0.0
+     */
     internal fun restoreState(stateHolder: TtsClientStateHolder): Unit {
         Log.d("TtsClient", "restoreState: $stateHolder")
 
@@ -251,23 +384,13 @@ public class TtsClient internal constructor(
             ),
             utteranceId = savedUtteranceId,
         )
-        Log.d(
-            "TtsClient",
-            "restoreState: $savedUtteranceId $currentStartIndex - $currentEndIndex"
-        )
 
         if (stateHolder.isSpeaking) {
             waitUntilInitialized {
-                val textToSpeak = utterance.content.toSubstring(startIndex = currentStartIndex)
-                Log.d(
-                    "TtsClient",
-                    "Text to speak: $textToSpeak"
-                )
                 navigateInUtterance(
                     utteranceId = savedUtteranceId,
                     startIndex = currentStartIndex,
                 )
-
                 if (contentMap.size > 1) {
                     contentMap.toList()
                         .sortedBy { pair -> pair.second.sequence }
@@ -287,42 +410,62 @@ public class TtsClient internal constructor(
     }
 
 
-    private fun onTtsInitialized(): Unit {
-        Log.d("TtsClient", "onTtsInitialized, adding utterance listener")
-        tts.setOnUtteranceProgressListener(utteranceProgressListener)
-        isInitialized = true
-    }
-
-
+    /**
+     * @param start Start index of currently spoken text (word) within [Utterance.content].
+     * @param end End index of currently spoken text (word) within [Utterance.content].
+     * @param mode Highlight mode
+     * @param utterance Currently active utterance to get range from.
+     * @return Range of text to highlight
+     */
     private fun getRange(
         start: Int,
         end: Int,
         mode: HighlightMode,
         utterance: Utterance,
     ): IntRange {
-        val threshold = utterance.currentThreshold
+        val threshold = utterance.currentIndexThreshold
         return when (mode) {
             HighlightMode.SPOKEN_WORD -> {
                 IntRange(start = start + threshold, endInclusive = end + threshold)
             }
 
             HighlightMode.SPOKEN_RANGE_FROM_BEGINNING -> {
+                //We want to highlight text from beggining, so start is 0
                 IntRange(start = 0, endInclusive = end + threshold)
             }
         }
     }
 
 
+    /**
+     * Waits until TTS engine is initialized before calling a [block]
+     * @param block Function holding some operation that can run only after [tts] is properly
+     * initialized.
+     * @since 1.0.0
+     */
     private fun waitUntilInitialized(
         block: suspend CoroutineScope.() -> Unit,
     ): Unit {
         coroutineScope.launch {
-            initDeferred.await()
-            block()
+            val initResult = initDeferred.await()
+            if (initResult) {
+                block()
+            } else {
+                Log.e(
+                    "TtsClient",
+                    "Unable to perform operation, TTS engine was not initialized successfully"
+                )
+            }
         }
     }
 
 
+    /**
+     * Just simple util function.
+     * @param startIndex Index of the first character to include in the returned substring.
+     * @return Substring of [this] string starting from [startIndex], or [this] when [startIndex] == 0.
+     * @since 1.0.0
+     */
     private fun String.toSubstring(
         startIndex: Int,
     ): String {

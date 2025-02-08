@@ -1,5 +1,6 @@
 package com.jet.tts
 
+import android.speech.tts.TextToSpeech
 import androidx.annotation.Keep
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -10,8 +11,12 @@ import androidx.compose.ui.platform.LocalContext
 
 
 /**
+ * @param highlightMode Specifies how the text it [TextTts] will be highlighted.
+ * @param onInitialized Callback to be called when [TextToSpeech] is initialized for further
+ * configuration (for example setting language).
  * @author Miroslav Hýbler <br>
  * created on 04.02.2025
+ * @since 1.0.0
  */
 @Composable
 @Keep
@@ -23,9 +28,7 @@ fun rememberTtsClient(
     val coroutineScope = rememberCoroutineScope()
     val stateHolder: TtsClientStateHolder = rememberSaveable(
         saver = TtsClientStateHolder.Saver,
-        init = {
-            TtsClientStateHolder()
-        },
+        init = { TtsClientStateHolder() },
     )
 
 
