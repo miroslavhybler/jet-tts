@@ -71,8 +71,8 @@ Column() {
             //Using ttsClient.isSpeaking state to handle play/stop
             if (!ttsClient.isSpeaking) {
                 ttsClient.speak(
-                    text=text,
-                    utteranceId=utteranceId,
+                    text = text,
+                    utteranceId = utteranceId,
                     queueMode = TextToSpeech.QUEUE_FLUSH, //Use QUEUE_FLUSH for replacing queue of QUEUE_ADD for add utterance to queue
                 )
             } else {
