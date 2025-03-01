@@ -1,6 +1,10 @@
 package com.jet.tts
 
 import androidx.annotation.Keep
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
@@ -9,23 +13,35 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFontFamilyResolver
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.dp
 
 
 /**
@@ -37,6 +53,9 @@ import androidx.compose.ui.unit.TextUnit
  * [TtsClient.speak].
  * @param ttsClient [TtsClient] used for [android.speech.tts.TextToSpeech] feature.
  * @param highlightStyle [TextStyle] used for highlighting text.
+ * @param scrollState When the text is longer than the screen, you can provide [ScrollState] to
+ * enable scroll feature, [TextTts] will apply slow scroll animation to keep highlighted text visible
+ * as it goes down through the [text].
  * @see [Text] for other parameters docs.
  * @author Miroslav Hýbler <br>
  * created on 04.02.2025
@@ -49,9 +68,7 @@ fun TextTts(
     text: String,
     utteranceId: String,
     ttsClient: TtsClient,
-    highlightStyle: TextStyle = LocalTextStyle.current.copy(
-        color = MaterialTheme.colorScheme.primary,
-    ),
+    scrollState: ScrollState? = null,
     color: Color = Color.Unspecified,
     fontSize: TextUnit = TextUnit.Unspecified,
     fontStyle: FontStyle? = null,
@@ -68,6 +85,9 @@ fun TextTts(
     inlineContent: Map<String, InlineTextContent> = mapOf(),
     onTextLayout: ((TextLayoutResult) -> Unit) = {},
     style: TextStyle = LocalTextStyle.current,
+    highlightStyle: TextStyle = style.copy(
+        color = MaterialTheme.colorScheme.primary,
+    ),
 ) {
 
     val utteranceRange by ttsClient.utteranceRange.collectAsState()
@@ -78,6 +98,7 @@ fun TextTts(
         range = utteranceRange,
         utteranceId = utteranceId,
         highlightStyle = highlightStyle,
+        scrollState = scrollState,
         color = color,
         fontSize = fontSize,
         fontStyle = fontStyle,
@@ -107,6 +128,9 @@ fun TextTts(
  * [TtsClient.speak].
  * @param range Range of the text to be highlighted.
  * @param highlightStyle [TextStyle] used for highlighting text.
+ * @param scrollState When the text is longer than the screen, you can provide [ScrollState] to
+ * enable scroll feature, [TextTts] will apply slow scroll animation to keep highlighted text visible
+ * as it goes down through the [text].
  * @see [Text] for other parameters docs.
  * @author Miroslav Hýbler <br>
  * created on 04.02.2025
@@ -119,9 +143,7 @@ fun TextTts(
     text: String,
     utteranceId: String,
     range: UtteranceProgress,
-    highlightStyle: TextStyle = LocalTextStyle.current.copy(
-        color = MaterialTheme.colorScheme.primary,
-    ),
+    scrollState: ScrollState?,
     color: Color = Color.Unspecified,
     fontSize: TextUnit = TextUnit.Unspecified,
     fontStyle: FontStyle? = null,
@@ -138,8 +160,15 @@ fun TextTts(
     inlineContent: Map<String, InlineTextContent> = mapOf(),
     onTextLayout: ((TextLayoutResult) -> Unit) = {},
     style: TextStyle = LocalTextStyle.current,
+    highlightStyle: TextStyle = LocalTextStyle.current.copy(
+        color = MaterialTheme.colorScheme.primary,
+    )
 ) {
-
+    val layoutDirection = LocalLayoutDirection.current
+    val density = LocalDensity.current
+    val fontFamilyResolver = LocalFontFamilyResolver.current
+    val textMeasurer = rememberTextMeasurer()
+    var layoutCoordinates: LayoutCoordinates? by remember { mutableStateOf(value = null) }
 
     var innerText: AnnotatedString by remember {
         mutableStateOf(
@@ -153,19 +182,79 @@ fun TextTts(
         )
     }
 
+    LaunchedEffect(key1 = range.utteranceId) {
+        val layout = layoutCoordinates ?: return@LaunchedEffect
+        if (range.utteranceId == utteranceId && scrollState != null) {
+            //TODO make possible to specify extra offset
+            val extraOffset = with(density) { 32.dp.toPx() }.toInt()
+
+            val newScrollValue= (layout.positionInRoot().y.toInt() - extraOffset)
+                .coerceAtLeast(minimumValue = 0)
+
+          if (newScrollValue <= scrollState.value) {
+              //For best UX scroll should always go down
+              return@LaunchedEffect
+          }
+
+            scrollState.animateScrollTo(
+                value = newScrollValue,
+                animationSpec = tween(
+                    durationMillis = 1500,
+                    easing = LinearEasing,
+                )
+            )
+        }
+    }
+
     LaunchedEffect(key1 = text, key2 = range) {
-        innerText = highlightText(
+        val newText = highlightText(
             text = text,
             range = range,
             highlightStyle = highlightStyle,
             normalStyle = style,
             utteranceId = utteranceId,
         )
+        innerText = newText
+
+
+        if (scrollState == null) return@LaunchedEffect
+        if (utteranceId != range.utteranceId) return@LaunchedEffect
+        if (scrollState.isScrollInProgress) return@LaunchedEffect
+
+
+        val measureResult = textMeasurer.measure(
+            text = newText,
+            style = style,
+            overflow = overflow,
+            softWrap = softWrap,
+            maxLines = maxLines,
+            placeholders = emptyList(),
+            constraints = Constraints(),
+            layoutDirection = layoutDirection,
+            density = density,
+            fontFamilyResolver = fontFamilyResolver,
+            skipCache = false,
+        )
+
+        val box = measureResult.getBoundingBox(offset = range.last)
+        val targetOffset = box.bottom
+        //TODO add option to "jump" down when scrollState.isScrollInProgress changes
+        //TODO also work with layoutResult to scroll down when there is content between tts texts
+        scrollState.animateScrollBy(
+            value = targetOffset,
+            animationSpec = tween(
+                durationMillis = 1750,
+                easing = LinearEasing,
+            )
+        )
     }
 
 
     Text(
-        modifier = modifier,
+        modifier = modifier
+            .onGloballyPositioned { coordinates ->
+                layoutCoordinates = coordinates
+            },
         text = innerText,
         color = color,
         fontSize = fontSize,

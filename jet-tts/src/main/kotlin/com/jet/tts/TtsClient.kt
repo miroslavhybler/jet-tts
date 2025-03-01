@@ -199,6 +199,15 @@ public class TtsClient internal constructor(
     public var currentUtteranceId: String by mutableStateOf(value = "")
         private set
 
+
+    /**
+     * 1f is default value for "average speech speed"
+     * @see [TextToSpeech.setSpeechRate]
+     */
+    public var speechRate: Float = 1f
+        private set
+
+
     /**
      * Range of text to highlight. Use [utteranceRange] to collect updates.
      * @since 1.0.0
@@ -215,6 +224,8 @@ public class TtsClient internal constructor(
 
     internal var currentStartIndex: Int = 0
         private set
+
+
     internal var currentEndIndex: Int = 0
         private set
 
@@ -308,6 +319,13 @@ public class TtsClient internal constructor(
         tts.stop()
         tts.shutdown()
         contentMap.clear()
+    }
+
+
+    public fun setSpeechRate(rate: Float) {
+        if (tts.setSpeechRate(rate) == TextToSpeech.SUCCESS) {
+            this.speechRate = rate
+        }
     }
 
 

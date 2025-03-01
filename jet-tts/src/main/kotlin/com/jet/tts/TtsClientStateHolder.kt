@@ -21,7 +21,7 @@ import androidx.core.os.bundleOf
  * @param startIndex Inclusive start index of the first character of the current utterance.
  * @param endIndex Exclusive end index of the last character of the current utterance.
  * @param isSpeaking Flag indicating if [TtsClient] was speaking when state was saved.
- * @param map Map of [Utterance]s addee to the [TtsClient].
+ * @param map Map of [Utterance]s added to the [TtsClient].
  * @author Miroslav Hýbler <br>
  * created on 05.02.2025
  * @since 1.0.0

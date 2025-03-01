@@ -59,6 +59,14 @@ fun HomeScreen(
                 ) {
                     Text(text = "Multiple texts example")
                 }
+
+                Button(
+                    onClick = {
+                        navController.navigate(route = "scroll")
+                    }
+                ) {
+                    Text(text = "Scroll example")
+                }
             }
         },
     )
