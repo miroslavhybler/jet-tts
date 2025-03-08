@@ -16,7 +16,7 @@ private val LightColorScheme = lightColorScheme()
 
 @Composable
 fun JetttsTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = true, //isSystemInDarkTheme(),
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {

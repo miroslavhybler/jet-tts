@@ -3,6 +3,7 @@
 package com.jet.tts
 
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
@@ -26,7 +27,7 @@ import java.util.Locale
  * to understand how [TextToSpeech] works.
  * Use [rememberTtsClient] to get an instance of [com.jet.tts.TtsClient].
  * @param context [Context] required for [TextToSpeech] initialization.
- * @param highlightMode Specifies how the text it [TextTts] will be highlighted.
+ * @param highlightMode Specifies how the text it [TextTts] will be highlighted, this works only for phones with api >= 26
  * @param stateHolder Helper variable to store state of [TtsClient].
  * @param onInitialized Callback to be called when [TextToSpeech] is initialized.
  * @param coroutineScope [CoroutineScope] used for waiting until TTS engine is initialized.
@@ -231,6 +232,11 @@ public class TtsClient internal constructor(
 
 
     init {
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            Log.i("TtsClient", "Highlight feature is not available on Android 7 and lower.")
+        }
+
         restoreState(stateHolder = stateHolder)
     }
 
@@ -297,11 +303,11 @@ public class TtsClient internal constructor(
 
 
     /**
-     * Stops currently speaking text.
+     * Stops currently speaking text. Next [speak] request with same utteranceId will start from beginning.
      * @since 1.0.0
      */
     public fun stop(): Unit {
-        Log.d("TtsClient", "stop()")
+        Log.i("TtsClient", "stop()")
         waitUntilInitialized {
             tts.stop()
             isSpeaking = false
@@ -315,7 +321,7 @@ public class TtsClient internal constructor(
      * @since 1.0.0
      */
     public fun release(): Unit {
-        Log.d("TtsClient", "release()")
+        Log.i("TtsClient", "release()")
         tts.stop()
         tts.shutdown()
         contentMap.clear()
@@ -334,7 +340,7 @@ public class TtsClient internal constructor(
      * This is used instead of [stop] to capture [isSpeaking] state properly.
      */
     internal fun stopOnDispose(): Unit {
-        Log.d("TtsClient", "stopOnDispose()")
+        Log.i("TtsClient", "stopOnDispose()")
         stateHolder.captureState(client = this)
         release()
     }
@@ -363,12 +369,30 @@ public class TtsClient internal constructor(
         val utterance = contentMap[utteranceId] ?: return
         val text = utterance.content
         utterance.currentIndexThreshold = startIndex
+        val textToBeSpoken = text.toSubstring(startIndex = startIndex)
 
         waitUntilInitialized {
-            val ssmlFormat: String = text.toSubstring(startIndex = startIndex)
-
-            tts.speak(ssmlFormat, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
+            tts.speak(
+                textToBeSpoken,
+                TextToSpeech.QUEUE_FLUSH,
+                null,
+                utteranceId
+            )
             isSpeaking = true
+
+            //Adding all NEXT utterances that comes after this one to the queue
+            contentMap.values
+                .filter { it.utteranceId != utteranceId }
+                .filter { it.sequence > utterance.sequence }
+                .sortedBy(Utterance::sequence)
+                .forEach { nextUtterance ->
+                    tts.speak(
+                        nextUtterance.content,
+                        TextToSpeech.QUEUE_ADD,
+                        null,
+                        nextUtterance.utteranceId,
+                    )
+                }
         }
 
     }

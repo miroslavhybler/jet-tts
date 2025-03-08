@@ -1,18 +1,23 @@
 # Jet Tts
-Jet Tts is a lightweighted [Text to Speech](https://android-developers.googleblog.com/2009/09/introduction-to-text-to-speech-in.html) implementation with text highlight feature and basic UI in Jetpack Compose.
 
+Jet Tts is a lightweight [Text to Speech](https://android-developers.googleblog.com/2009/09/introduction-to-text-to-speech-in.html)implementation with text highlight feature and basic UI in Jetpack Compose.
 
 ### Add queries block to `AndoridManifest.xml`
-> Apps targeting Android 11 that use text-to-speech should declare `TextToSpeech.Engine.INTENT_ACTION_TTS_SERVICE` in the queries elements of their manifest:
+
+> Apps targeting Android 11 that use text-to-speech should declare
+`TextToSpeech.Engine.INTENT_ACTION_TTS_SERVICE` in the queries elements of their manifest:
+
 ```xml
+
 <queries>
-     <intent>
+    <intent>
         <action android:name="android.intent.action.TTS_SERVICE" />
     </intent>
 </queries>
 ```
 
 ### Simple Usage Example
+
 ```kotlin
 //Text to be shown and spoken by tts
 const val text = "Hello World"
@@ -24,7 +29,7 @@ val ttsClient = rememberTtsClient()
 
 Column() {
     TextTts(
-        text= text,
+        text = text,
         utteranceId = utteranceId,
         ttsClient = ttsClient,
     )
@@ -32,8 +37,8 @@ Column() {
     Button(
         onClick = {
             ttsClient.speak(
-                text=text, 
-                utteranceId=utteranceId,
+                text = text,
+                utteranceId = utteranceId,
             )
         },
     ) {
@@ -42,8 +47,8 @@ Column() {
 }
 ```
 
-
 ### Usage with handling TtsClient state and customization (limited)
+
 ```kotlin
 //Text to be shown and spoken by tts
 const val text = "Hello World"
@@ -60,7 +65,7 @@ val ttsClient = rememberTtsClient(
 
 Column() {
     TextTts(
-        text= text,
+        text = text,
         utteranceId = utteranceId,
         ttsClient = ttsClient,
         highlightStyle = TextStyle(color = Color.Red) //Setting custom highlight style
@@ -71,8 +76,8 @@ Column() {
             //Using ttsClient.isSpeaking state to handle play/stop
             if (!ttsClient.isSpeaking) {
                 ttsClient.speak(
-                    text=text,
-                    utteranceId=utteranceId,
+                    text = text,
+                    utteranceId = utteranceId,
                     queueMode = TextToSpeech.QUEUE_FLUSH, //Use QUEUE_FLUSH for replacing queue of QUEUE_ADD for add utterance to queue
                 )
             } else {
@@ -82,8 +87,25 @@ Column() {
     ) {
         //Using ttsClient.isSpeaking state to show proper text on button
         Text(
-            text = if (!ttsClient.isSpeaking)  "Speak" else "Stop"
+            text = if (!ttsClient.isSpeaking) "Speak" else "Stop"
         )
     }
+}
+```
+
+### Autoscroll when speaking
+
+```kotlin
+val scrollState = rememberScrollState()
+Column(
+    modifier = Modifier
+        .verticalScroll(state = scrollState)
+) {
+    TextTts(
+        text = "",
+        ttsClient = ttsClient,
+        utteranceId = "content",
+        scrollState = scrollState,
+    )
 }
 ```
