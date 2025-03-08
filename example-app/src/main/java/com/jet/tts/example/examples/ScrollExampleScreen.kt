@@ -16,12 +16,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jet.tts.TextTts
 import com.jet.tts.TtsClient
+import com.jet.tts.example.LocalTtsClient
 import com.jet.tts.example.R
 import com.jet.tts.rememberTtsClient
 import java.util.Locale
@@ -47,13 +49,14 @@ private const val content3: String = "Aliquam interdum id ligula vitae accumsan.
  */
 @Composable
 fun ScrollExampleScreen() {
-    val ttsClient = rememberTtsClient(
-        highlightMode = TtsClient.HighlightMode.SPOKEN_RANGE_FROM_BEGINNING,
-        onInitialized = { ttsClient ->
-            ttsClient.setLanguage(language = Locale.US)
-        },
-    )
+    val ttsClient = LocalTtsClient.current
     val scrollState = rememberScrollState()
+
+
+    LaunchedEffect(key1 = Unit) {
+        ttsClient.highlightMode = TtsClient.HighlightMode.SPOKEN_RANGE_FROM_BEGINNING
+    }
+
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),

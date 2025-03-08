@@ -67,6 +67,14 @@ fun HomeScreen(
                 ) {
                     Text(text = "Scroll example")
                 }
+
+                Button(
+                    onClick = {
+                        navController.navigate(route = "toggle")
+                    }
+                ) {
+                    Text(text = "Toggle highlight mode example")
+                }
             }
         },
     )

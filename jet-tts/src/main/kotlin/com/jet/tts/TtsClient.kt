@@ -25,7 +25,24 @@ import java.util.Locale
 /**
  * Simple client class to use [TextToSpeech] feature. Take a look at [Dev blog](https://android-developers.googleblog.com/2009/09/introduction-to-text-to-speech-in.html)
  * to understand how [TextToSpeech] works.
+ *
+ * ## Features
+ *
+ * ### Text highlight Feature (api >= 26)
+ *Using `TtsClient.HighlightMode` to set how you want to highlight currently spoken text:
+ * * `SPOKEN_WORD` - `TextTts` will highlight currently spoken sequence (single word in most cases).
+ * * `SPOKEN_RANGE_FROM_BEGINNING` - `TextTts` will highlight range from the beggining to the currently spoken sequence.
+ * See [HighlightMode].
+ *
+ * ### Autoscroll Feature (api >= 26)
+ * By providing a [androidx.compose.foundation.ScrollState], [TextTts] can use it to autoscroll to
+ * currently spoken line. Solution for [androidx.compose.foundation.lazy.LazyColumn] is not avaliable now.
  * Use [rememberTtsClient] to get an instance of [com.jet.tts.TtsClient].
+ *
+ * ## Navigation Feature
+ * It is possible to "navigate" in utterance when `ttsClient.isSpeaking == true`, by clicking into
+ * [TextTts] client will navigate speech by clicked word.
+ *
  * @param context [Context] required for [TextToSpeech] initialization.
  * @param highlightMode Specifies how the text it [TextTts] will be highlighted, this works only for phones with api >= 26
  * @param stateHolder Helper variable to store state of [TtsClient].
@@ -39,7 +56,7 @@ import java.util.Locale
 @Keep
 public class TtsClient internal constructor(
     context: Context,
-    val highlightMode: HighlightMode = HighlightMode.SPOKEN_WORD,
+    defaultHighlightMode: HighlightMode,
     internal val stateHolder: TtsClientStateHolder,
     private val onInitialized: (TtsClient) -> Unit = {},
     private val coroutineScope: CoroutineScope,
@@ -166,6 +183,7 @@ public class TtsClient internal constructor(
      */
     private var isInitialized: Boolean = false
 
+
     /**
      * Map of [Utterance]s added by [speak].
      * @since 1.0.0
@@ -200,13 +218,18 @@ public class TtsClient internal constructor(
     public var currentUtteranceId: String by mutableStateOf(value = "")
         private set
 
-
     /**
      * 1f is default value for "average speech speed"
      * @see [TextToSpeech.setSpeechRate]
      */
     public var speechRate: Float = 1f
         private set
+
+
+    /**
+     * @since 1.0.0
+     */
+    public var highlightMode: HighlightMode by mutableStateOf(value = defaultHighlightMode)
 
 
     /**

@@ -11,11 +11,13 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.jet.tts.TextTts
 import com.jet.tts.TtsClient
+import com.jet.tts.example.LocalTtsClient
 import com.jet.tts.example.R
 import com.jet.tts.rememberTtsClient
 import java.util.Locale
@@ -35,12 +37,11 @@ private const val content3: String = "TtsClient is also saving and restoring sta
  */
 @Composable
 fun MultipleTextsExampleScreen() {
-    val ttsClient = rememberTtsClient(
-        highlightMode = TtsClient.HighlightMode.SPOKEN_WORD,
-        onInitialized = { ttsClient ->
-            ttsClient.setLanguage(language = Locale.US)
-        },
-    )
+    val ttsClient = LocalTtsClient.current
+
+    LaunchedEffect(key1 = Unit) {
+        ttsClient.highlightMode = TtsClient.HighlightMode.SPOKEN_WORD
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),

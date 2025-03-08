@@ -35,7 +35,7 @@ fun rememberTtsClient(
     val client: TtsClient = remember {
         TtsClient(
             context = context,
-            highlightMode = highlightMode,
+            defaultHighlightMode = highlightMode,
             onInitialized = onInitialized,
             stateHolder = stateHolder,
             coroutineScope = coroutineScope,

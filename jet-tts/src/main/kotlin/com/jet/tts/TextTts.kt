@@ -38,20 +38,40 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import com.jet.tts.TtsClient.HighlightMode
 
 
 /**
  * Basic implementation of [Text] with text highlight feature. Plain [Utterance.content] is styled
  * by [highlightText].
- * @param text Text to be displayed and highlighted by [TtsClient.highlightMode].
+ *
+ * ## Features
+ *
+ * ### Text highlight Feature (api >= 26)
+ *Using `TtsClient.HighlightMode` to set how you want to highlight currently spoken text:
+ * * `SPOKEN_WORD` - `TextTts` will highlight currently spoken sequence (single word in most cases).
+ * * `SPOKEN_RANGE_FROM_BEGINNING` - `TextTts` will highlight range from the beggining to the currently spoken sequence.
+ * See [HighlightMode].
+ *
+ * ### Autoscroll Feature (api >= 26)
+ * By providing a [androidx.compose.foundation.ScrollState], [TextTts] can use it to autoscroll to
+ * currently spoken line. Solution for [androidx.compose.foundation.lazy.LazyColumn] is not avaliable now.
+ * Use [rememberTtsClient] to get an instance of [com.jet.tts.TtsClient].
+ *
+ * ## Navigation Feature
+ * It is possible to "navigate" in utterance when `ttsClient.isSpeaking == true`, by clicking into
+ * [TextTts] client will navigate speech by clicked word.
+ *
+ * @param text Text to be displayed and highlighted by [TtsClient.highlightMode]. Must be same
+ * text as passed in [TtsClient.speak] with the [utteranceId].
  * @param utteranceId Unique identifier of the utterance. When text displayed is not for the current
  * utterance, text will not be highlighted. **Make sure [utteranceId] matched with one passed in
  * [TtsClient.speak].
- * @param ttsClient [TtsClient] used for [android.speech.tts.TextToSpeech] feature.
- * @param highlightStyle [TextStyle] used for highlighting text.
+ * @param ttsClient [TtsClient] instance used for [android.speech.tts.TextToSpeech] feature.
+ * @param highlightStyle [TextStyle] used for highlighting text by [TtsClient.highlightMode].
  * @param scrollState When the text is longer than the screen, you can provide [ScrollState] to
- * enable scroll feature, [TextTts] will apply slow scroll animation to keep highlighted text visible
- * as it goes down through the [text].
+ * enable scroll feature (requires api >= 26), [TextTts] will apply slow scroll animation to keep
+ * highlighted text visible as it goes down through the [text].
  * @see [Text] for other parameters docs.
  * @author Miroslav Hýbler <br>
  * created on 04.02.2025
@@ -105,13 +125,17 @@ fun TextTts(
         )
     }
 
+    //Holds index of line that is currently spoken (api >= 26)
     var currentSpokenLine by remember { mutableIntStateOf(value = 0) }
 
 
     /**
      * Tries to scroll to the line of text that is currently spoken by [TtsClient] when conditions are met:
      * * Current [range]'s utteranceId matches [utteranceId]
+     * * [TtsClient.isSpeaking] is true.
      * * [scrollState] is not null
+     * * New scroll value is greater than the current scroll value
+     * @since 1.0.0
      */
     suspend fun tryScrollToCurrentLine(): Unit {
         if (range.utteranceId != utteranceId) return
@@ -152,6 +176,7 @@ fun TextTts(
     LaunchedEffect(
         key1 = text,
         key2 = range,
+        key3 = ttsClient.highlightMode,
     ) {
         val newText = highlightText(
             text = text,
@@ -259,7 +284,8 @@ private fun highlightText(
 
 
 /**
- *
+ * [Modifier] for handling navigation in utterance when [TtsClient.isSpeaking] is true.
+ * @since 1.0.0
  */
 private fun Modifier.ttsClickModifier(
     textLayout: TextLayoutResult?,
@@ -271,10 +297,10 @@ private fun Modifier.ttsClickModifier(
             val textLayoutResult = textLayout ?: return@detectTapGestures
             //Clicked char offset from the start of the text
             val offset = textLayoutResult.getOffsetForPosition(position = tapOffset)
-            //Navigate to clicked word
+            //
             val word = textLayoutResult.getWordBoundary(offset = offset)
             if (word.start < 0) return@detectTapGestures
-
+            //Navigate to clicked word
             ttsClient.navigateInUtterance(
                 utteranceId = utteranceId,
                 startIndex = word.start,
