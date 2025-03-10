@@ -39,6 +39,7 @@ private const val content: String = "Lorem ipsum dolor sit amet, consectetur adi
         "Curabitur rutrum sed leo at ornare. Nunc nec arcu commodo, dignissim mauris eu, lobortis."
 
 /**
+ * Example with toggling the [TtsClient.highlightMode].
  * @author Miroslav Hýbler<br>
  * created on 08.03.2025
  */

@@ -11,6 +11,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.jet.tts.TtsClient
+import com.jet.tts.example.examples.ArticleExampleScreen
 import com.jet.tts.example.examples.MultipleTextsExampleScreen
 import com.jet.tts.example.examples.ScrollExampleScreen
 import com.jet.tts.example.examples.SingleTextExampleScreen
@@ -63,6 +64,9 @@ class MainActivity : ComponentActivity() {
                         composable(route = "toggle") {
                             ToggleHighlightModeScreen()
                         }
+                        composable(route = "article") {
+                            ArticleExampleScreen()
+                        }
                     }
                 }
             }
@@ -71,9 +75,11 @@ class MainActivity : ComponentActivity() {
 }
 
 /**
- * Because [TtsClient] is using context, it's recomended to use only one instance of [TtsClient]
+ * Because [TtsClient] is using context, it's recommended to use only one instance of [TtsClient]
  * in your application.
  */
 val LocalTtsClient: ProvidableCompositionLocal<TtsClient> = compositionLocalOf(
-    defaultFactory = { error(message = "LocalTtsClient can be used only insde MainActivity's content") }
+    defaultFactory = {
+        error(message = "LocalTtsClient can be used only insde MainActivity's content")
+    }
 )

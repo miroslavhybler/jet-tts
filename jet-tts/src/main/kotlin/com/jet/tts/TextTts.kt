@@ -263,22 +263,30 @@ private fun highlightText(
     }
     val highlightSpanStyle = highlightStyle.toSpanStyle()
 
-    return buildAnnotatedString {
-        if (range.first > 0) {
-            withStyle(style = normalSpanStyle) {
-                append(text = text.substring(startIndex = 0, endIndex = range.first))
+    return try {
+        buildAnnotatedString {
+            if (range.first > 0) {
+                withStyle(style = normalSpanStyle) {
+                    append(text = text.substring(startIndex = 0, endIndex = range.first))
+                }
             }
-        }
-        withStyle(style = highlightSpanStyle) {
-            //Appending text that should be highlighted
-            append(text = text.substring(startIndex = range.first, endIndex = range.last))
-        }
+            withStyle(style = highlightSpanStyle) {
+                //Appending text that should be highlighted
+                append(text = text.substring(startIndex = range.first, endIndex = range.last))
+            }
 
-        if (range.last != text.length) {
-            withStyle(style = normalSpanStyle) {
-                append(text = text.substring(startIndex = range.last, endIndex = text.length))
+            if (range.last != text.length) {
+                withStyle(style = normalSpanStyle) {
+                    append(text = text.substring(startIndex = range.last, endIndex = text.length))
+                }
             }
         }
+    } catch (exception: StringIndexOutOfBoundsException) {
+        throw IllegalStateException(
+            "Visible text for utterance $utteranceId doesn't match text passed into ttsClient! " +
+                    "Check if have content and ids mapped correctly.",
+            exception
+        )
     }
 }
 

@@ -8,6 +8,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 
 
 /**
@@ -25,6 +26,9 @@ fun rememberTtsClient(
     onInitialized: (TtsClient) -> Unit = {},
 ): TtsClient {
     val context = LocalContext.current
+    val isInpsection = LocalInspectionMode.current //TODO add preview safe TtsClient, create ITtsClient
+
+
     val coroutineScope = rememberCoroutineScope()
     val stateHolder: TtsClientStateHolder = rememberSaveable(
         saver = TtsClientStateHolder.Saver,

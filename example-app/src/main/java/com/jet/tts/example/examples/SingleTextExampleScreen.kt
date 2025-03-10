@@ -36,6 +36,7 @@ private val content: String =
 
 
 /**
+ * the simplest possible example of [TextTts] and [TtsClient] usage.
  * @author Miroslav Hýbler <br>
  * created on 06.02.2025
  */

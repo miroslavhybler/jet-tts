@@ -19,6 +19,7 @@ import androidx.navigation.NavController
 
 
 /**
+ * Simple home screen with navigation buttons to navigate to example screens
  * @author Miroslav Hýbler <br>
  * created on 06.02.2025
  */
@@ -74,6 +75,14 @@ fun HomeScreen(
                     }
                 ) {
                     Text(text = "Toggle highlight mode example")
+                }
+
+                Button(
+                    onClick = {
+                        navController.navigate(route = "article")
+                    }
+                ) {
+                    Text(text = "Article example")
                 }
             }
         },

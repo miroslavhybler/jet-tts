@@ -32,6 +32,7 @@ private const val content3: String = "TtsClient is also saving and restoring sta
 
 
 /**
+ * Example of having multiple utterances in [TextTts].
  * @author Miroslav Hýbler <br>
  * created on 06.02.2025
  */

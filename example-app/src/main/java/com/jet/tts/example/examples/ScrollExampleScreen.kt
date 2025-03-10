@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jet.tts.TextTts
@@ -44,12 +45,14 @@ private const val content3: String = "Aliquam interdum id ligula vitae accumsan.
 
 
 /**
+ * Example of the autoscroll feature
  * @author Miroslav Hýbler <br>
  * created on 24.02.2025
  */
 @Composable
-fun ScrollExampleScreen() {
-    val ttsClient = LocalTtsClient.current
+fun ScrollExampleScreen(
+    ttsClient: TtsClient = LocalTtsClient.current
+) {
     val scrollState = rememberScrollState()
 
 
@@ -84,7 +87,7 @@ fun ScrollExampleScreen() {
                     ttsClient = ttsClient,
                     utteranceId = "1",
                     style = MaterialTheme.typography.headlineLarge,
-                    scrollState = scrollState,
+                    scrollState = scrollState, //ScrollState for autoscroll feature
                 )
 
                 Image(
@@ -100,7 +103,7 @@ fun ScrollExampleScreen() {
                     ttsClient = ttsClient,
                     utteranceId = "2",
                     style = MaterialTheme.typography.headlineLarge,
-                    scrollState = scrollState,
+                    scrollState = scrollState, //ScrollState for autoscroll feature
                     )
                 Image(
                     modifier = Modifier
@@ -114,7 +117,7 @@ fun ScrollExampleScreen() {
                     ttsClient = ttsClient,
                     utteranceId = "3",
                     style = MaterialTheme.typography.headlineLarge,
-                    scrollState = scrollState,
+                    scrollState = scrollState, //ScrollState for autoscroll feature
                 )
 
                 Spacer(modifier = Modifier.height(height = 32.dp))
@@ -160,5 +163,13 @@ fun ScrollExampleScreen() {
                 )
             }
         }
+    )
+}
+
+@Composable
+@PreviewLightDark
+private fun ScrollExampleScreenPreview() {
+    ScrollExampleScreen(
+        ttsClient = rememberTtsClient()
     )
 }

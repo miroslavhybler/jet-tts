@@ -69,7 +69,8 @@ public class TtsClient internal constructor(
     public enum class HighlightMode {
 
         /**
-         * Mode to highlight only the spoken word out of the spoken content.
+         * Mode to highlight only the spoken sequence out of the spoken content. This would be a
+         * single word in 99% of the time. The other cases are like spelling by characters.
          */
         SPOKEN_WORD,
 
@@ -81,21 +82,22 @@ public class TtsClient internal constructor(
     }
 
     /**
-     * Deferred used for waiting until TTS engine is initialized.
+     * Deferred used for waiting until TTS engine is initialized. Initialization is required for
+     * any operation with [tts]. Use [waitUntilInitialized] for any function that requires TTS engine.
      * @since 1.0.0
      */
     private val initDeferred = CompletableDeferred<Boolean>()
 
 
     /**
-     * Listener used for listening TextToSpeach initialization
+     * Listener used for listening TextToSpeech initialization
      * @since 1.0.0
      */
     private val initListener: TextToSpeech.OnInitListener = object : TextToSpeech.OnInitListener {
         override fun onInit(status: Int) {
             when (status) {
                 TextToSpeech.SUCCESS -> {
-                    Log.d("TtsClient", "onTtsInitialized()")
+                    Log.i("TtsClient", "onTtsInitialized()")
                     tts.setOnUtteranceProgressListener(utteranceProgressListener)
                     isInitialized = true
                     initDeferred.complete(value = true)
@@ -117,11 +119,17 @@ public class TtsClient internal constructor(
 
 
     /**
-     * Listener used for listening to utterance progress to update [utteranceRange], [currentUtteranceId]
+     * Listener used for listening to utterance progress to update [utteranceRange], [currentUtteranceId].
+     * **[UtteranceProgressListener.onRangeStart] works only on api >= 26**, so any feature that
+     * depends on this function is also available only on **api >= 26**.
      * @since 1.0.0
      */
     private val utteranceProgressListener: UtteranceProgressListener =
         object : UtteranceProgressListener() {
+
+            /**
+             * Called when spoken range of utterance changes.
+             */
             override fun onRangeStart(
                 utteranceId: String,
                 start: Int,
@@ -145,6 +153,9 @@ public class TtsClient internal constructor(
                 stateHolder.captureState(client = this@TtsClient)
             }
 
+            /**
+             * Called when new utterance with id [utteranceId] starts.
+             */
             override fun onStart(utteranceId: String) {
                 Log.d("TtsClient", "onStart: $utteranceId")
                 currentUtteranceId = utteranceId
@@ -152,6 +163,10 @@ public class TtsClient internal constructor(
                 isSpeaking = true
             }
 
+
+            /**
+             * Called when utterance with id [utteranceId] ends.
+             */
             override fun onDone(utteranceId: String) {
                 Log.d("TtsClient", "onDone: $utteranceId")
                 if (contentMap.contains(key = utteranceId)) {
@@ -161,6 +176,10 @@ public class TtsClient internal constructor(
                 isSpeaking = false
             }
 
+
+            /**
+             * Called when utterance with id [utteranceId] fails.
+             */
             override fun onError(utteranceId: String?) {
                 Log.w("TtsClient", "onError: $utteranceId")
                 isSpeaking = false
@@ -169,7 +188,7 @@ public class TtsClient internal constructor(
 
 
     /**
-     * TextToSpeech instance used for speaking.
+     * [TextToSpeech] engine instance used for speaking.
      * @since 1.0.0
      */
     private val tts = TextToSpeech(context, initListener)
@@ -185,7 +204,7 @@ public class TtsClient internal constructor(
 
 
     /**
-     * Map of [Utterance]s added by [speak].
+     * Map of all [Utterance]s for this client added by [speak], [add] or [flushAndSpeak].
      * @since 1.0.0
      */
     internal var contentMap: HashMap<String, Utterance> = hashMapOf()
@@ -207,6 +226,7 @@ public class TtsClient internal constructor(
      *     Text(text= if (client.isSpeaking) "Stop" else "Speak")
      * }
      * ```
+     * @since 1.0.0
      */
     public var isSpeaking: Boolean by mutableStateOf(value = false)
         private set
@@ -214,19 +234,23 @@ public class TtsClient internal constructor(
 
     /**
      * Unique identifier of the current utterance.
+     * @since 1.0.0
      */
     public var currentUtteranceId: String by mutableStateOf(value = "")
         private set
 
+
     /**
-     * 1f is default value for "average speech speed"
+     * 1f is default value for "average speech speed", bigger value means faster speech.
      * @see [TextToSpeech.setSpeechRate]
+     * @since 1.0.0
      */
     public var speechRate: Float = 1f
         private set
 
 
     /**
+     * Current highlight mode, see [HighlightMode] for more details.
      * @since 1.0.0
      */
     public var highlightMode: HighlightMode by mutableStateOf(value = defaultHighlightMode)
@@ -246,20 +270,30 @@ public class TtsClient internal constructor(
     val utteranceRange: StateFlow<UtteranceProgress> get() = mUtteranceRange.asStateFlow()
 
 
+    /**
+     * Holding current start index of the current utterance. Saving it helps with [getRange] call
+     * when restoring state.
+     * @since 1.0.0
+     */
     internal var currentStartIndex: Int = 0
         private set
 
 
+    /**
+     * Holding current end index of the current utterance. Saving it helps with [getRange] call
+     * when restoring state.
+     * @since 1.0.0
+     */
     internal var currentEndIndex: Int = 0
         private set
 
 
     init {
-
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             Log.i("TtsClient", "Highlight feature is not available on Android 7 and lower.")
         }
 
+        //Constructor is called in rememberTtsClient, so we try to restore state if it's available.
         restoreState(stateHolder = stateHolder)
     }
 
@@ -326,6 +360,58 @@ public class TtsClient internal constructor(
 
 
     /**
+     * Flushes previous queue (if there was) and creates new one. Calls a [speak] with [TextToSpeech.QUEUE_FLUSH].
+     * @param text Text to be spoken.
+     * @param utteranceId Unique identifier of the utterance. This is required since without [utteranceId],
+     * [UtteranceProgressListener] would not be called and text highlight feature would not work.
+     * @param params Parameters for the request. Can be null. See [TextToSpeech.speak] for more
+     * details.
+     * @param startIndex Index of the first character of the current utterance.
+     * @since 1.0.0
+     */
+    public fun flushAndSpeak(
+        text: String,
+        utteranceId: String,
+        params: Bundle? = null,
+        startIndex: Int = 0,
+    ) {
+        speak(
+            text = text,
+            utteranceId = utteranceId,
+            queueMode = TextToSpeech.QUEUE_FLUSH,
+            params = params,
+            startIndex = startIndex,
+        )
+    }
+
+
+    /**
+     * Adds utterance to the queue, calls a [speak] with [TextToSpeech.QUEUE_ADD].
+     * @param text Text to be spoken.
+     * @param utteranceId Unique identifier of the utterance. This is required since without [utteranceId],
+     * [UtteranceProgressListener] would not be called and text highlight feature would not work.
+     * @param params Parameters for the request. Can be null. See [TextToSpeech.speak] for more
+     * details.
+     * @param startIndex Index of the first character of the current utterance.
+     * @since 1.0.0
+     */
+    public fun add(
+        text: String,
+        utteranceId: String,
+        params: Bundle? = null,
+        startIndex: Int = 0,
+    ) {
+        speak(
+            text = text,
+            utteranceId = utteranceId,
+            queueMode = TextToSpeech.QUEUE_ADD,
+            params = params,
+            startIndex = startIndex,
+        )
+    }
+
+
+    /**
      * Stops currently speaking text. Next [speak] request with same utteranceId will start from beginning.
      * @since 1.0.0
      */
@@ -351,9 +437,17 @@ public class TtsClient internal constructor(
     }
 
 
+    /**
+     * Sets speech rate of [TextToSpeech] engine. 1f is default value for "average speech speed",
+     * bigger value means faster speech.
+     * @param rate Speech rate. 1f is default value for "average speech speed", bigger value means faster speech.
+     * @since 1.0.0
+     */
     public fun setSpeechRate(rate: Float) {
-        if (tts.setSpeechRate(rate) == TextToSpeech.SUCCESS) {
-            this.speechRate = rate
+       waitUntilInitialized {
+            if (tts.setSpeechRate(rate) == TextToSpeech.SUCCESS) {
+                this@TtsClient.speechRate = rate
+            }
         }
     }
 
@@ -429,16 +523,19 @@ public class TtsClient internal constructor(
         Log.d("TtsClient", "restoreState: $stateHolder")
 
         if (stateHolder.isEmpty) {
+            //Nothing to restore
             return
         }
 
+        //Last active utterance when captureState was called, normally onDispose
         val savedUtteranceId = stateHolder.utteranceId
 
         currentStartIndex = stateHolder.startIndex
         currentEndIndex = stateHolder.endIndex
         stateHolder.map.forEach { (k, v) -> contentMap[k] = v }
-
+        //Finding last active utterance by it's id
         val utterance = contentMap[savedUtteranceId] ?: return
+
 
         mUtteranceRange.value = UtteranceProgress(
             range = getRange(
@@ -451,6 +548,7 @@ public class TtsClient internal constructor(
         )
 
         if (stateHolder.isSpeaking) {
+            //When client was speaking before, we have to navigate it properly to continue where it was
             waitUntilInitialized {
                 navigateInUtterance(
                     utteranceId = savedUtteranceId,
@@ -463,11 +561,8 @@ public class TtsClient internal constructor(
                             if (index == 0) {
                                 return@forEachIndexed
                             }
-                            speak(
-                                text = pair.second.content,
-                                utteranceId = pair.first,
-                                queueMode = TextToSpeech.QUEUE_ADD,
-                            )
+                            //Adding all next utterances after active one to the queue
+                            add(text = pair.second.content, utteranceId = pair.first,)
                         }
                 }
             }
