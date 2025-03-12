@@ -2,6 +2,8 @@
 
 Jet Tts is a lightweight [Text to Speech](https://android-developers.googleblog.com/2009/09/introduction-to-text-to-speech-in.html) implementation with additional features and basic UI in Jetpack Compose.
 
+![Ilustration image](/images/showcase.gif)
+
 ### Add queries block to `AndoridManifest.xml`
 
 > Apps targeting Android 11 that use text-to-speech should declare
