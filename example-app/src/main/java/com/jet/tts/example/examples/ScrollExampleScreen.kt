@@ -104,7 +104,7 @@ fun ScrollExampleScreen(
                     utteranceId = "2",
                     style = MaterialTheme.typography.headlineLarge,
                     scrollState = scrollState, //ScrollState for autoscroll feature
-                    )
+                )
                 Image(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -135,19 +135,19 @@ fun ScrollExampleScreen(
                         ttsClient.speak(
                             text = content,
                             utteranceId = "1",
-                            queueMode = TextToSpeech.QUEUE_FLUSH,
+                            queueMode = TtsClient.QueueMode.FLUSH,
                         )
 
                         ttsClient.speak(
                             text = content2,
                             utteranceId = "2",
-                            queueMode = TextToSpeech.QUEUE_ADD,
+                            queueMode = TtsClient.QueueMode.ADD,
                         )
 
                         ttsClient.speak(
                             text = content3,
                             utteranceId = "3",
-                            queueMode = TextToSpeech.QUEUE_ADD,
+                            queueMode = TtsClient.QueueMode.ADD,
                         )
                     }
                 },

@@ -20,11 +20,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.jet.tts.TextTts
+import com.jet.tts.TtsClient
+import com.jet.tts.example.JetTtsExampleTheme
 import com.jet.tts.example.LocalTtsClient
 import com.jet.tts.example.R
+import com.jet.tts.rememberTtsClient
 
 
 /**
@@ -77,8 +81,9 @@ val article: Article = Article(
  * created on 10.03.2025
  */
 @Composable
-fun ArticleExampleScreen() {
-    val ttsClient = LocalTtsClient.current
+fun ArticleExampleScreen(
+    ttsClient: TtsClient = LocalTtsClient.current
+) {
 
     val scrollState = rememberScrollState()
 
@@ -179,5 +184,15 @@ fun ArticleExampleScreen() {
             }
         }
     )
+}
 
+
+@Composable
+@PreviewLightDark
+private fun ArticleExampleScreenPreview() {
+    JetTtsExampleTheme {
+        ArticleExampleScreen(
+            ttsClient = rememberTtsClient(),
+        )
+    }
 }

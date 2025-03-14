@@ -10,6 +10,7 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -171,7 +172,6 @@ fun TextTts(
         tryScrollToCurrentLine()
     }
 
-
     //Effect to highlight text when range changes and also scroll to currently spoken text
     LaunchedEffect(
         key1 = text,
@@ -196,6 +196,14 @@ fun TextTts(
     //Effect to handle scroll to the current line
     LaunchedEffect(key1 = currentSpokenLine) {
         tryScrollToCurrentLine()
+    }
+
+    DisposableEffect(key1 = Unit) {
+        onDispose {
+            if(utteranceId ==range.utteranceId) {
+                ttsClient.stopOnDispose()
+            }
+        }
     }
 
 

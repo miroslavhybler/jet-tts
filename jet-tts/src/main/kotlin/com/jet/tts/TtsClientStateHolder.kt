@@ -52,7 +52,12 @@ internal data class TtsClientStateHolder internal constructor(
      * has changed.**
      * @since 1.0.0
      */
-    internal fun captureState(client: TtsClient) {
+    internal fun captureState(client: TtsClientImpl) {
+
+        if (client.isInDisposeState) {
+            return
+        }
+
         this.utteranceId = client.currentUtteranceId
         this.startIndex = client.currentStartIndex
         this.endIndex = client.currentEndIndex

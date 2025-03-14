@@ -6,9 +6,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import kotlinx.coroutines.launch
 
 
 /**
@@ -26,8 +31,13 @@ fun rememberTtsClient(
     onInitialized: (TtsClient) -> Unit = {},
 ): TtsClient {
     val context = LocalContext.current
-    val isInpsection = LocalInspectionMode.current //TODO add preview safe TtsClient, create ITtsClient
+    val isInspection = LocalInspectionMode.current
 
+    if (isInspection) {
+        return remember {
+            TtsClientPreview()
+        }
+    }
 
     val coroutineScope = rememberCoroutineScope()
     val stateHolder: TtsClientStateHolder = rememberSaveable(
@@ -36,8 +46,8 @@ fun rememberTtsClient(
     )
 
 
-    val client: TtsClient = remember {
-        TtsClient(
+    val client: TtsClientImpl = remember {
+        TtsClientImpl(
             context = context,
             defaultHighlightMode = highlightMode,
             onInitialized = onInitialized,
@@ -46,10 +56,9 @@ fun rememberTtsClient(
         )
     }
 
-
     DisposableEffect(key1 = Unit) {
         onDispose {
-            client.stopOnDispose()
+            client.release()
         }
     }
 

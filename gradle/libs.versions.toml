@@ -13,8 +13,12 @@ composeBom = "2025.01.01"
 appcompat = "1.7.0"
 material = "1.12.0"
 navigationCompose = "2.8.6"
-
+jetUtils = "1.1.2"
+jetLint = "1.0.2"
 [libraries]
+
+jet-utils = { module = "com.github.miroslavhybler:jet-utils", version.ref = "jetUtils" }
+jet-lint = { module = "com.github.miroslavhybler:jet-lint", version.ref = "jetLint" }
 
 androidx-adaptive = { module = "androidx.compose.material3.adaptive:adaptive", version.ref = "adaptive" }
 androidx-adaptive-layout = { module = "androidx.compose.material3.adaptive:adaptive-layout", version.ref = "adaptive" }

@@ -1,6 +1,7 @@
 package com.jet.tts.example
 
 import android.os.Build
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -14,7 +15,7 @@ import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun JetTtsExampleTheme(
-    darkTheme: Boolean = true, //isSystemInDarkTheme(),
+    darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {

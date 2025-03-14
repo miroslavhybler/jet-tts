@@ -80,6 +80,7 @@ fun ToggleHighlightModeScreen() {
                         ttsClient.speak(
                             text = content,
                             utteranceId = "content",
+                            queueMode = TtsClient.QueueMode.FLUSH,
                         )
                     }
                 },

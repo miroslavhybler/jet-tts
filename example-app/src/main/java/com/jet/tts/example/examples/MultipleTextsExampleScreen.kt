@@ -80,23 +80,9 @@ fun MultipleTextsExampleScreen() {
                         ttsClient.stop()
                     } else {
 
-                        ttsClient.speak(
-                            text = content,
-                            utteranceId = "1",
-                            queueMode = TextToSpeech.QUEUE_FLUSH,
-                        )
-
-                        ttsClient.speak(
-                            text = content2,
-                            utteranceId = "2",
-                            queueMode = TextToSpeech.QUEUE_ADD,
-                        )
-
-                        ttsClient.speak(
-                            text = content3,
-                            utteranceId = "3",
-                            queueMode = TextToSpeech.QUEUE_ADD,
-                        )
+                        ttsClient.flushAndSpeak(text = content, utteranceId = "1",)
+                        ttsClient.add(text = content2, utteranceId = "2",)
+                        ttsClient.add(text = content3, utteranceId = "3",)
                     }
                 },
             ) {

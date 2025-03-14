@@ -39,6 +39,9 @@ android {
 
 dependencies {
 
+    implementation(libs.jet.utils)
+    implementation(libs.jet.lint)
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(platform(libs.androidx.compose.bom))
