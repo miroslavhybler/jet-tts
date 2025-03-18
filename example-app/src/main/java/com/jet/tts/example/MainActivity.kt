@@ -11,6 +11,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.jet.tts.TtsClient
+import com.jet.tts.example.examples.AnnotatedStringExampleScreen
 import com.jet.tts.example.examples.ArticleExampleScreen
 import com.jet.tts.example.examples.MultipleTextsExampleScreen
 import com.jet.tts.example.examples.ScrollExampleScreen
@@ -66,6 +67,9 @@ class MainActivity : ComponentActivity() {
                         }
                         composable(route = "article") {
                             ArticleExampleScreen()
+                        }
+                        composable(route = "annotated") {
+                            AnnotatedStringExampleScreen()
                         }
                     }
                 }

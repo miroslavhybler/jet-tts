@@ -51,6 +51,7 @@ fun MultipleTextsExampleScreen() {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues = innerPadding)
+                    .padding(horizontal = 16.dp)
             ) {
 
                 Spacer(modifier = Modifier.height(height = 16.dp))

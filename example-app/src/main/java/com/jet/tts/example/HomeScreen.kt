@@ -84,6 +84,14 @@ fun HomeScreen(
                 ) {
                     Text(text = "Article example")
                 }
+
+                Button(
+                    onClick = {
+                        navController.navigate(route = "annotated")
+                    }
+                ) {
+                    Text(text = "Original string annotated example")
+                }
             }
         },
     )

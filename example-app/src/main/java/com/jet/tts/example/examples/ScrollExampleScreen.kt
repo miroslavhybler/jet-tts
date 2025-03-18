@@ -69,6 +69,7 @@ fun ScrollExampleScreen(
                     .fillMaxSize()
                     .verticalScroll(state = scrollState)
                     .padding(paddingValues = innerPadding)
+                    .padding(horizontal = 16.dp)
             ) {
 
                 Spacer(modifier = Modifier.height(height = 32.dp))
