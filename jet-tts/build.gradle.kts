@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("kotlin-parcelize")
+    id("maven-publish")
 }
 
 android {
@@ -18,7 +19,7 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -34,6 +35,12 @@ android {
     }
     buildFeatures {
         compose = true
+    }
+    publishing {
+        multipleVariants {
+            withSourcesJar()
+            withJavadocJar()
+        }
     }
 }
 
@@ -59,4 +66,24 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            create<MavenPublication>("release") {
+                from(components.getByName("release"))
+                groupId = "com.jet"
+                artifactId = "tts"
+                version = "1.0.0-alpha01"
+                pom {
+                    description.set("Jitpack.io deploy")
+                }
+            }
+
+        }
+        repositories {
+            mavenLocal()
+        }
+    }
 }

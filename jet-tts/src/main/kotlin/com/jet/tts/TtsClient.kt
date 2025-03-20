@@ -9,6 +9,7 @@ package com.jet.tts
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
+import androidx.annotation.Keep
 import kotlinx.coroutines.flow.StateFlow
 import java.util.Locale
 
@@ -37,12 +38,14 @@ import java.util.Locale
  * created on 13.03.2025
  * @see TtsClientImpl
  */
+@Keep
 public abstract class TtsClient {
 
     /**
      * Specifies how the text it [TextTts] will be highlighted.
      * @since 1.0.0
      */
+    @Keep
     public enum class HighlightMode {
 
         /**
@@ -62,6 +65,7 @@ public abstract class TtsClient {
     /**
      * @since 1.0.0
      */
+    @Keep
     public enum class QueueMode {
 
         /**
@@ -188,6 +192,7 @@ public abstract class TtsClient {
     /**
      * Stops currently speaking text in [androidx.compose.runtime.DisposableEffect].
      * This is used instead of [stop] to capture [isSpeaking] state properly.
+     * @since 1.0.0
      */
     internal abstract fun stopOnDispose(): Unit
 
