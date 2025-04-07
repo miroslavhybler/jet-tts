@@ -63,6 +63,7 @@ public abstract class TtsClient {
 
 
     /**
+     * Specifies how [speak] should handle actual queue.
      * @since 1.0.0
      */
     @Keep
@@ -70,11 +71,14 @@ public abstract class TtsClient {
 
         /**
          * Equivalent for [TextToSpeech.QUEUE_FLUSH]
+         * @since 1.0.0
          */
         FLUSH,
 
+        
         /**
          * Equivalent for [TextToSpeech.QUEUE_ADD]
+         * @since 1.0.0
          */
         ADD;
     }

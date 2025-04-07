@@ -90,7 +90,7 @@ fun AnnotatedStringExampleScreen(
                 TextTts(
                     text = content,
                     ttsClient = ttsClient,
-                    utteranceId = "content",
+                    utteranceId = "AnnotatedStringExampleScreen_content",
                 )
             }
         },
@@ -103,7 +103,7 @@ fun AnnotatedStringExampleScreen(
                     } else {
                         ttsClient.flushAndSpeak(
                             text = content.toString(),
-                            utteranceId = "content",
+                            utteranceId = "AnnotatedStringExampleScreen_content",
                         )
                     }
                 },

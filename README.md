@@ -2,6 +2,8 @@
 
 Jet Tts is a lightweight [Text to Speech](https://android-developers.googleblog.com/2009/09/introduction-to-text-to-speech-in.html) implementation with additional features and basic UI in Jetpack Compose.
 
+**IMPORTANT:** Keep in mind that `utteranceId` should be unique for each utterance across whole app, othwerwise you are at risk of inconsistent text highlighting.
+
 ![Ilustration image](/images/showcase.gif)
 
 ### Add queries block to `AndoridManifest.xml`
@@ -77,7 +79,7 @@ Column(
 }
 ```
 
-## Navigation Feature
+### Navigation Feature
 It is possible to "navigate" in utterance when `ttsClient.isSpeaking == true`, by clicking into `TextTts` client will navigate speech by clicked word.
 
 

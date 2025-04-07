@@ -59,17 +59,17 @@ fun MultipleTextsExampleScreen() {
                 TextTts(
                     text = content,
                     ttsClient = ttsClient,
-                    utteranceId = "1",
+                    utteranceId = "MultipleTextsExampleScreen_1",
                 )
                 TextTts(
                     text = content2,
                     ttsClient = ttsClient,
-                    utteranceId = "2",
+                    utteranceId = "MultipleTextsExampleScreen_2",
                 )
                 TextTts(
                     text = content3,
                     ttsClient = ttsClient,
-                    utteranceId = "3",
+                    utteranceId = "MultipleTextsExampleScreen_3",
                 )
             }
         },
@@ -81,9 +81,18 @@ fun MultipleTextsExampleScreen() {
                         ttsClient.stop()
                     } else {
 
-                        ttsClient.flushAndSpeak(text = content, utteranceId = "1",)
-                        ttsClient.add(text = content2, utteranceId = "2",)
-                        ttsClient.add(text = content3, utteranceId = "3",)
+                        ttsClient.flushAndSpeak(
+                            text = content,
+                            utteranceId = "MultipleTextsExampleScreen_1",
+                        )
+                        ttsClient.add(
+                            text = content2,
+                            utteranceId = "MultipleTextsExampleScreen_2",
+                        )
+                        ttsClient.add(
+                            text = content3,
+                            utteranceId = "MultipleTextsExampleScreen_3",
+                        )
                     }
                 },
             ) {

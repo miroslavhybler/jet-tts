@@ -86,7 +86,7 @@ fun ScrollExampleScreen(
                 TextTts(
                     text = content,
                     ttsClient = ttsClient,
-                    utteranceId = "1",
+                    utteranceId = "ScrollExampleScreen_1",
                     style = MaterialTheme.typography.headlineLarge,
                     scrollState = scrollState, //ScrollState for autoscroll feature
                 )
@@ -102,7 +102,7 @@ fun ScrollExampleScreen(
                 TextTts(
                     text = content2,
                     ttsClient = ttsClient,
-                    utteranceId = "2",
+                    utteranceId = "ScrollExampleScreen_2",
                     style = MaterialTheme.typography.headlineLarge,
                     scrollState = scrollState, //ScrollState for autoscroll feature
                 )
@@ -116,7 +116,7 @@ fun ScrollExampleScreen(
                 TextTts(
                     text = content3,
                     ttsClient = ttsClient,
-                    utteranceId = "3",
+                    utteranceId = "ScrollExampleScreen_3",
                     style = MaterialTheme.typography.headlineLarge,
                     scrollState = scrollState, //ScrollState for autoscroll feature
                 )
@@ -135,19 +135,19 @@ fun ScrollExampleScreen(
 
                         ttsClient.speak(
                             text = content,
-                            utteranceId = "1",
+                            utteranceId = "ScrollExampleScreen_1",
                             queueMode = TtsClient.QueueMode.FLUSH,
                         )
 
                         ttsClient.speak(
                             text = content2,
-                            utteranceId = "2",
+                            utteranceId = "ScrollExampleScreen_2",
                             queueMode = TtsClient.QueueMode.ADD,
                         )
 
                         ttsClient.speak(
                             text = content3,
-                            utteranceId = "3",
+                            utteranceId = "ScrollExampleScreen_3",
                             queueMode = TtsClient.QueueMode.ADD,
                         )
                     }

@@ -63,7 +63,7 @@ fun SingleTextExampleScreen() {
                 TextTts(
                     text = content,
                     ttsClient = ttsClient,
-                    utteranceId = "content",
+                    utteranceId = "SingleTextExampleScreen_content",
                     highlightStyle = TextStyle(color = Color.Red)
                 )
             }
@@ -77,7 +77,7 @@ fun SingleTextExampleScreen() {
                     } else {
                         ttsClient.speak(
                             text = content,
-                            utteranceId = "content",
+                            utteranceId = "SingleTextExampleScreen_content",
                             queueMode = TtsClient.QueueMode.FLUSH,
                         )
                     }

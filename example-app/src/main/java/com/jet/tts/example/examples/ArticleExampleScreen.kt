@@ -107,7 +107,7 @@ fun ArticleExampleScreen(
                     text = article.title,
                     ttsClient = ttsClient,
                     scrollState = scrollState, //ScrollState for autoscroll feature
-                    utteranceId = "title",
+                    utteranceId = "ArticleExampleScreen_title",
                     style = MaterialTheme.typography.headlineMedium,
                 )
 
@@ -115,7 +115,7 @@ fun ArticleExampleScreen(
                     text = article.description,
                     ttsClient = ttsClient,
                     scrollState = scrollState, //ScrollState for autoscroll feature
-                    utteranceId = "desc",
+                    utteranceId = "ArticleExampleScreen_desc",
                     style = MaterialTheme.typography.bodyLarge,
                 )
 
@@ -134,7 +134,7 @@ fun ArticleExampleScreen(
                     text = article.content,
                     ttsClient = ttsClient,
                     scrollState = scrollState, //ScrollState for autoscroll feature
-                    utteranceId = "content",
+                    utteranceId = "ArticleExampleScreen_content",
                     style = MaterialTheme.typography.bodyLarge,
                 )
 
@@ -153,7 +153,7 @@ fun ArticleExampleScreen(
                     text = article.content2,
                     ttsClient = ttsClient,
                     scrollState = scrollState, //ScrollState for autoscroll feature
-                    utteranceId = "content2",
+                    utteranceId = "ArticleExampleScreen_content2",
                     style = MaterialTheme.typography.bodyLarge,
                 )
             }
@@ -165,10 +165,22 @@ fun ArticleExampleScreen(
                     if (ttsClient.isSpeaking) {
                         ttsClient.stop()
                     } else {
-                        ttsClient.flushAndSpeak(text = article.title, utteranceId = "title")
-                        ttsClient.add(text = article.description, utteranceId = "desc")
-                        ttsClient.add(text = article.content, utteranceId = "content")
-                        ttsClient.add(text = article.content2, utteranceId = "content2")
+                        ttsClient.flushAndSpeak(
+                            text = article.title,
+                            utteranceId = "ArticleExampleScreen_title"
+                        )
+                        ttsClient.add(
+                            text = article.description,
+                            utteranceId = "ArticleExampleScreen_desc"
+                        )
+                        ttsClient.add(
+                            text = article.content,
+                            utteranceId = "ArticleExampleScreen_content"
+                        )
+                        ttsClient.add(
+                            text = article.content2,
+                            utteranceId = "ArticleExampleScreen_content2"
+                        )
                     }
                 },
             ) {

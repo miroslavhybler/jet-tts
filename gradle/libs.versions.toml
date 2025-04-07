@@ -1,6 +1,6 @@
 [versions]
 adaptive = "1.0.0"
-agp = "8.10.0-alpha08"
+agp = "8.11.0-alpha03"
 coil = "2.7.0"
 kotlin = "2.1.0"
 coreKtx = "1.15.0"

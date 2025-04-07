@@ -66,7 +66,7 @@ fun ToggleHighlightModeScreen() {
                 TextTts(
                     text = content,
                     ttsClient = ttsClient,
-                    utteranceId = "content",
+                    utteranceId = "ToggleHighlightModeScreen_content",
                     highlightStyle = TextStyle(color = Color.Red)
                 )
             }
@@ -80,7 +80,7 @@ fun ToggleHighlightModeScreen() {
                     } else {
                         ttsClient.speak(
                             text = content,
-                            utteranceId = "content",
+                            utteranceId = "ToggleHighlightModeScreen_content",
                             queueMode = TtsClient.QueueMode.FLUSH,
                         )
                     }
