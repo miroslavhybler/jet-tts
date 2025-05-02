@@ -144,6 +144,9 @@ public abstract class TtsClient {
      */
     @Deprecated(
         message = "Will be Internal in the future, use flushAndSpeak() or add() instead.",
+        replaceWith = ReplaceWith(
+            expression = "flushAndSpeak(text, utteranceId, params, startIndex)",
+        )
     )
     public abstract fun speak(
         text: String,
