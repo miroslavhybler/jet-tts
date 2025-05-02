@@ -9,12 +9,11 @@ import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import androidx.annotation.Keep
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.text.TextStyle
-import com.jet.tts.TtsClient.HighlightMode
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -50,6 +49,8 @@ import java.util.Locale
  * @param stateHolder Helper variable to store state of [TtsClient].
  * @param onInitialized Callback to be called when [TextToSpeech] is initialized.
  * @param coroutineScope [CoroutineScope] used for waiting until TTS engine is initialized.
+ * @param isUsingResume True when you want [TtsClient] to support a "resume" function allowing to
+ * resume speech instead of being spoken from beginning.
  * @author Miroslav Hýbler <br>
  * created on 04.02.2025
  * @since 1.0.0
@@ -58,10 +59,11 @@ import java.util.Locale
 @Keep
 internal class TtsClientImpl internal constructor(
     context: Context,
-    defaultHighlightMode: TtsClient.HighlightMode,
+    initialHighlightMode: TtsClient.HighlightMode,
     internal val stateHolder: TtsClientStateHolder,
     private val onInitialized: (TtsClient) -> Unit = {},
     private val coroutineScope: CoroutineScope,
+    private val isUsingResume: Boolean,
 ) : TtsClient() {
 
 
@@ -77,26 +79,24 @@ internal class TtsClientImpl internal constructor(
      * Listener used for listening TextToSpeech initialization
      * @since 1.0.0
      */
-    private val initListener: TextToSpeech.OnInitListener = object : TextToSpeech.OnInitListener {
-        override fun onInit(status: Int) {
-            when (status) {
-                TextToSpeech.SUCCESS -> {
-                    Log.i("TtsClient", "onTtsInitialized()")
-                    tts.setOnUtteranceProgressListener(utteranceProgressListener)
-                    isInitialized = true
-                    initDeferred.complete(value = true)
-                    onInitialized(this@TtsClientImpl)
-                }
+    private val initListener: TextToSpeech.OnInitListener = TextToSpeech.OnInitListener { status ->
+        when (status) {
+            TextToSpeech.SUCCESS -> {
+                Log.i("TtsClient", "onTtsInitialized()")
+                tts.setOnUtteranceProgressListener(utteranceProgressListener)
+                isInitialized = true
+                initDeferred.complete(value = true)
+                onInitialized(this@TtsClientImpl)
+            }
 
-                TextToSpeech.ERROR -> {
-                    Log.e("TtsClient", "Error while initializing TTS engine")
-                    initDeferred.complete(value = false)
-                }
+            TextToSpeech.ERROR -> {
+                Log.e("TtsClient", "Error while initializing TTS engine")
+                initDeferred.complete(value = false)
+            }
 
-                else -> {
-                    Log.e("TtsClient", "Unknown status while initializing TTS engine")
-                    initDeferred.complete(value = false)
-                }
+            else -> {
+                Log.e("TtsClient", "Unknown status while initializing TTS engine")
+                initDeferred.complete(value = false)
             }
         }
     }
@@ -123,7 +123,6 @@ internal class TtsClientImpl internal constructor(
                 val utterance = contentMap[utteranceId] ?: return
                 currentStartIndex = start
                 currentEndIndex = end
-                //    Log.d("TtsClient", "onRangeStart: $utteranceId $start - $end")
                 mUtteranceRange.value = UtteranceProgress(
                     range = getRange(
                         start = start,
@@ -153,7 +152,7 @@ internal class TtsClientImpl internal constructor(
              */
             override fun onDone(utteranceId: String) {
                 Log.d("TtsClient", "onDone: $utteranceId")
-                if (contentMap.contains(key = utteranceId)) {
+                if (!isUsingResume && contentMap.contains(key = utteranceId)) {
                     contentMap.remove(key = utteranceId)
                 }
 
@@ -187,6 +186,11 @@ internal class TtsClientImpl internal constructor(
     private var isInitialized: Boolean = false
 
 
+    /**
+     * True when [TtsClient] was stopped by [androidx.compose.runtime.DisposableEffect]. When true,
+     * client should avoid property changes so state from [stateHolder] can be saved by [TtsClientStateHolder.Saver].
+     * @since 1.0.0
+     */
     internal var isInDisposeState: Boolean = false
 
 
@@ -239,7 +243,7 @@ internal class TtsClientImpl internal constructor(
      * Current highlight mode, see [HighlightMode] for more details.
      * @since 1.0.0
      */
-    public override var highlightMode: HighlightMode by mutableStateOf(value = defaultHighlightMode)
+    public override var highlightMode: HighlightMode by mutableStateOf(value = initialHighlightMode)
 
 
     /**
@@ -302,6 +306,7 @@ internal class TtsClientImpl internal constructor(
 
 
     /**
+     * If you are using resume feature by setting [isUsingResume] to true, use [flushAndSpeak] and [add] instead.
      * @param text Text to be spoken.
      * @param utteranceId Unique identifier of the utterance. This is required since without [utteranceId],
      * [UtteranceProgressListener] would not be called and text highlight feature would not work.
@@ -346,7 +351,7 @@ internal class TtsClientImpl internal constructor(
                     QueueMode.ADD -> TextToSpeech.QUEUE_ADD
                 },
                 params,
-                utteranceId
+                utteranceId,
             )
             isSpeaking = true
         }
@@ -369,6 +374,17 @@ internal class TtsClientImpl internal constructor(
         params: Bundle?,
         startIndex: Int,
     ) {
+        if (isUsingResume && stateHolder.isNotEmpty) {
+            val utterance = contentMap[stateHolder.utteranceId]
+            if (utterance != null) {
+                navigateInUtterance(
+                    utteranceId = utterance.utteranceId,
+                    startIndex = utterance.currentIndexThreshold,
+                )
+                return
+            }
+        }
+
         speak(
             text = text,
             utteranceId = utteranceId,
@@ -395,13 +411,25 @@ internal class TtsClientImpl internal constructor(
         params: Bundle?,
         startIndex: Int,
     ) {
-        speak(
-            text = text,
-            utteranceId = utteranceId,
-            queueMode = QueueMode.ADD,
-            params = params,
-            startIndex = startIndex,
-        )
+        if (!isSpeaking && isUsingResume && stateHolder.isNotEmpty) {
+            val utterance = contentMap[stateHolder.utteranceId]
+            if (utterance != null) {
+                navigateInUtterance(
+                    utteranceId = utterance.utteranceId,
+                    startIndex = utterance.currentIndexThreshold,
+                )
+                return
+            }
+
+        } else if (!contentMap.contains(key = utteranceId)) {
+            speak(
+                text = text,
+                utteranceId = utteranceId,
+                queueMode = QueueMode.ADD,
+                params = params,
+                startIndex = startIndex,
+            )
+        }
     }
 
 
@@ -415,6 +443,10 @@ internal class TtsClientImpl internal constructor(
             tts.stop()
             isSpeaking = false
             stateHolder.captureState(client = this@TtsClientImpl)
+            if (stateHolder.isNotEmpty && isUsingResume) {
+                //Saving index threshold to resume playing from the same position where it ended
+                contentMap[stateHolder.utteranceId]?.currentIndexThreshold = stateHolder.startIndex
+            }
         }
     }
 
@@ -432,7 +464,7 @@ internal class TtsClientImpl internal constructor(
 
 
     /**
-     * Sets speech rate of [TextToSpeech] engine. 1f is default value for "average speech speed",
+     * Sets speech rate of [TextToSpeech] engine. `1f` is default value for "average speech speed",
      * bigger value means faster speech.
      * @param rate Speech rate. 1f is default value for "average speech speed", bigger value means faster speech.
      * @since 1.0.0
@@ -479,6 +511,7 @@ internal class TtsClientImpl internal constructor(
         utteranceId: String,
         startIndex: Int,
     ): Unit {
+        Log.i("TtsClient", "navigateInUtterance(utteranceId=$utteranceId, startIndex=$startIndex)")
         val utterance = contentMap[utteranceId] ?: return
         val text = utterance.content
         utterance.currentIndexThreshold = startIndex
@@ -495,9 +528,9 @@ internal class TtsClientImpl internal constructor(
 
             //Adding all NEXT utterances that comes after this one to the queue
             contentMap.values
-                .filter { it.utteranceId != utteranceId }
-                .filter { it.sequence > utterance.sequence }
-                .sortedBy(Utterance::sequence)
+                .filter(predicate = { it.utteranceId != utteranceId })
+                .sortedBy(selector = Utterance::sequence)
+                .filter(predicate = { it.sequence > utterance.sequence })
                 .forEach { nextUtterance ->
                     tts.speak(
                         nextUtterance.content,
@@ -582,11 +615,13 @@ internal class TtsClientImpl internal constructor(
         val threshold = utterance.currentIndexThreshold
         return when (mode) {
             TtsClient.HighlightMode.SPOKEN_WORD -> {
+                Log.d("TtsClient", "getRange: $start - $end")
                 IntRange(start = start + threshold, endInclusive = end + threshold)
             }
 
             TtsClient.HighlightMode.SPOKEN_RANGE_FROM_BEGINNING -> {
-                //We want to highlight text from beggining, so start is 0
+                //We want to highlight text from beginning, so start is 0
+                Log.d("TtsClient", "getRange: 0 - ${end + threshold}")
                 IntRange(start = 0, endInclusive = end + threshold)
             }
         }

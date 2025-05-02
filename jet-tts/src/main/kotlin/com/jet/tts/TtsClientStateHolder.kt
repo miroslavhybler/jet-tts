@@ -10,6 +10,7 @@ package com.jet.tts
 
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.annotation.Keep
 import androidx.compose.runtime.saveable.SaverScope
 import androidx.core.os.bundleOf
@@ -47,6 +48,14 @@ internal data class TtsClientStateHolder internal constructor(
 
 
     /**
+     * Flag indicating if state is not empty.
+     * @since 1.0.0
+     */
+    internal val isNotEmpty: Boolean
+        get() = !isEmpty
+
+
+    /**
      * Captures current state of [TtsClient] and saves to be saved later by [Saver]. **[TtsClient]
      * has to call [captureState] in all scenarios when some of the parameters [com.jet.tts.TtsClientStateHolder]
      * has changed.**
@@ -55,6 +64,7 @@ internal data class TtsClientStateHolder internal constructor(
     internal fun captureState(client: TtsClientImpl) {
 
         if (client.isInDisposeState) {
+            //Client is disposed, meaning that screen was closed or configuration change happened
             return
         }
 
@@ -85,26 +95,26 @@ internal data class TtsClientStateHolder internal constructor(
                 START_INDEX to state.startIndex,
                 END_INDEX to state.endIndex,
                 IS_SPEAKING to state.isSpeaking,
-                MAP to state.map,
+                MAP to HashMap(state.map), //We need to create copy for state saver
             )
         }
 
 
-        override fun restore(bundle: Bundle): TtsClientStateHolder {
+        override fun restore(value: Bundle): TtsClientStateHolder {
             val holder = TtsClientStateHolder(
-                utteranceId = bundle.getString(UTTERANCE_ID, ""),
-                startIndex = bundle.getInt(START_INDEX, 0),
-                endIndex = bundle.getInt(END_INDEX, 0),
-                isSpeaking = bundle.getBoolean(IS_SPEAKING, false),
+                utteranceId = value.getString(UTTERANCE_ID, ""),
+                startIndex = value.getInt(START_INDEX, 0),
+                endIndex = value.getInt(END_INDEX, 0),
+                isSpeaking = value.getBoolean(IS_SPEAKING, false),
                 map = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     val type = HashMap::class.java
-                    (bundle.getSerializable(
+                    (value.getSerializable(
                         MAP,
                         type
                     ) as? HashMap<String, Utterance>) ?: emptyMap()
                 } else {
                     @Suppress("DEPRECATION")
-                    (bundle.getSerializable(
+                    (value.getSerializable(
                         MAP,
                     ) as? HashMap<String, Utterance>) ?: emptyMap()
                 },

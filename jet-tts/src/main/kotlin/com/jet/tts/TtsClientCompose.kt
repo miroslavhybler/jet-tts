@@ -19,6 +19,8 @@ import kotlinx.coroutines.launch
 /**
  * @param highlightMode Specifies how the text it [TextTts] will be highlighted.
  * @param onInitialized Callback to be called when [TextToSpeech] is initialized for further
+ * @param isUsingResume True when you want [TtsClient] to support a "resume" function allowing to
+ * resume speech instead of being spoken from beginning.
  * configuration (for example setting language).
  * @author Miroslav Hýbler <br>
  * created on 04.02.2025
@@ -29,6 +31,7 @@ import kotlinx.coroutines.launch
 fun rememberTtsClient(
     highlightMode: TtsClient.HighlightMode = TtsClient.HighlightMode.SPOKEN_WORD,
     onInitialized: (TtsClient) -> Unit = {},
+    isUsingResume: Boolean = false,
 ): TtsClient {
     val context = LocalContext.current
     val isInspection = LocalInspectionMode.current
@@ -49,10 +52,11 @@ fun rememberTtsClient(
     val client: TtsClientImpl = remember {
         TtsClientImpl(
             context = context,
-            defaultHighlightMode = highlightMode,
+            initialHighlightMode = highlightMode,
             onInitialized = onInitialized,
             stateHolder = stateHolder,
             coroutineScope = coroutineScope,
+            isUsingResume=isUsingResume,
         )
     }
 

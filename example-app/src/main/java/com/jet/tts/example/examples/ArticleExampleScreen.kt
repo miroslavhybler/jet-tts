@@ -165,9 +165,9 @@ fun ArticleExampleScreen(
                     if (ttsClient.isSpeaking) {
                         ttsClient.stop()
                     } else {
-                        ttsClient.flushAndSpeak(
+                        ttsClient.add(
                             text = article.title,
-                            utteranceId = "ArticleExampleScreen_title"
+                            utteranceId = "ArticleExampleScreen_title",
                         )
                         ttsClient.add(
                             text = article.description,

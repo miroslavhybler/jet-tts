@@ -132,7 +132,6 @@ fun ScrollExampleScreen(
                     if (ttsClient.isSpeaking) {
                         ttsClient.stop()
                     } else {
-
                         ttsClient.speak(
                             text = content,
                             utteranceId = "ScrollExampleScreen_1",

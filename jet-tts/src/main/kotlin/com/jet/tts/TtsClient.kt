@@ -75,14 +75,13 @@ public abstract class TtsClient {
          */
         FLUSH,
 
-        
+
         /**
          * Equivalent for [TextToSpeech.QUEUE_ADD]
          * @since 1.0.0
          */
         ADD;
     }
-
 
 
     /**
@@ -130,6 +129,7 @@ public abstract class TtsClient {
 
 
     /**
+     *  If you are using resume feature by setting [TtsClientImpl.isUsingResume] to true, use [flushAndSpeak] and [add] instead.
      * @param text Text to be spoken.
      * @param utteranceId Unique identifier of the utterance. This is required since without [utteranceId],
      * [UtteranceProgressListener] would not be called and text highlight feature would not work.
@@ -142,6 +142,9 @@ public abstract class TtsClient {
      * @since 1.0.0
      * @see [TtsClientImpl.speak] for source code implementation.
      */
+    @Deprecated(
+        message = "Will be Internal in the future, use flushAndSpeak() or add() instead.",
+    )
     public abstract fun speak(
         text: String,
         utteranceId: String,

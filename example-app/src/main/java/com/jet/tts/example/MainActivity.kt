@@ -39,6 +39,7 @@ class MainActivity : ComponentActivity() {
                 onInitialized = { ttsClient ->
                     ttsClient.setLanguage(language = Locale.US)
                 },
+                isUsingResume = true,
             )
 
             JetTtsExampleTheme {

@@ -21,6 +21,7 @@ Jet Tts is a lightweight [Text to Speech](https://android-developers.googleblog.
 
 ### Create TtsClient instance
 Since `TtsClient` is using `Context` it's recommended to use single `TtsClient` instance in your application, you can use [CompositionLocalProvider](https://developer.android.com/develop/ui/compose/compositionlocal).
+
 ```kotlin
 //Define CompositionLocalProvider that will provide c
 val LocalTtsClient: ProvidableCompositionLocal<TtsClient> = compositionLocalOf(
@@ -159,3 +160,7 @@ Column() {
     }
 }
 ```
+
+### Warnings (What not to do)
+* Do not use different string in UI and in the client
+* Do not change text under `utteranceId`
