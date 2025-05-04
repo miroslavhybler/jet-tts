@@ -9,7 +9,6 @@ import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import androidx.annotation.Keep
-import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -131,6 +130,7 @@ internal class TtsClientImpl internal constructor(
                         utterance = utterance,
                     ),
                     utteranceId = utteranceId,
+                    sequence = utterance.sequence,
                 )
 
                 stateHolder.captureState(client = this@TtsClientImpl)
@@ -318,6 +318,10 @@ internal class TtsClientImpl internal constructor(
      * @param startIndex Index of the first character of the current utterance.
      * @since 1.0.0
      */
+    @Deprecated(
+        message = "Will be Internal in the future, use flushAndSpeak() or add() instead.",
+        replaceWith = ReplaceWith("flushAndSpeak(text, utteranceId, params, startIndex)"),
+    )
     public override fun speak(
         text: String,
         utteranceId: String,
@@ -545,6 +549,26 @@ internal class TtsClientImpl internal constructor(
 
 
     /**
+     * Util function to get sequence (index) of an utterance.
+     * @param utteranceId Id of utterance to get sequence for.
+     * @return Sequence (index) of the utterance with given [utteranceId] or [Int.MAX_VALUE] when
+     * utterance is not found in [contentMap]. This is used for [HighlightMode.SPOKEN_RANGE_FROM_BEGINNING_INCLUDING_PREVIOUS_UTTERANCES]
+     * when [TextTts] has to highlight all "previous" utterances too, so returning [Int.MAX_VALUE] by
+     * default won't cause unwanted highlights.
+     * @since 1.0.0
+     */
+    internal override fun getSequenceForUtterance(
+        utteranceId: String,
+    ): Int {
+        if (!contentMap.containsKey(key = utteranceId)) {
+            return Int.MAX_VALUE
+        }
+
+        return contentMap[utteranceId]?.sequence ?: Int.MAX_VALUE
+    }
+
+
+    /**
      * Restores state of [TtsClient] from saved [TtsClientStateHolder].
      * @since 1.0.0
      */
@@ -574,6 +598,7 @@ internal class TtsClientImpl internal constructor(
                 utterance = utterance,
             ),
             utteranceId = savedUtteranceId,
+            sequence = utterance.sequence,
         )
 
         if (stateHolder.isSpeaking) {
@@ -605,21 +630,23 @@ internal class TtsClientImpl internal constructor(
      * @param mode Highlight mode
      * @param utterance Currently active utterance to get range from.
      * @return Range of text to highlight
+     * @since 1.0.0
      */
     private fun getRange(
         start: Int,
         end: Int,
-        mode: TtsClient.HighlightMode,
+        mode: HighlightMode,
         utterance: Utterance,
     ): IntRange {
         val threshold = utterance.currentIndexThreshold
         return when (mode) {
-            TtsClient.HighlightMode.SPOKEN_WORD -> {
+            HighlightMode.SPOKEN_WORD -> {
                 Log.d("TtsClient", "getRange: $start - $end")
                 IntRange(start = start + threshold, endInclusive = end + threshold)
             }
 
-            TtsClient.HighlightMode.SPOKEN_RANGE_FROM_BEGINNING -> {
+            HighlightMode.SPOKEN_RANGE_FROM_BEGINNING,
+            HighlightMode.SPOKEN_RANGE_FROM_BEGINNING_INCLUDING_PREVIOUS_UTTERANCES -> {
                 //We want to highlight text from beginning, so start is 0
                 Log.d("TtsClient", "getRange: 0 - ${end + threshold}")
                 IntRange(start = 0, endInclusive = end + threshold)

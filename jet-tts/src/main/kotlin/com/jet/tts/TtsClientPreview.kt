@@ -28,7 +28,6 @@ public class TtsClientPreview internal constructor() : TtsClient() {
         MutableStateFlow(value = UtteranceProgress.EMPTY)
 
 
-
     override fun setLanguage(language: Locale) {
         notImplementedMessage(name = "setLanguage")
     }
@@ -59,6 +58,10 @@ public class TtsClientPreview internal constructor() : TtsClient() {
     }
 
 
+    @Deprecated(
+        message = "Will be Internal in the future, use flushAndSpeak() or add() instead.",
+        replaceWith = ReplaceWith("flushAndSpeak(text, utteranceId, params, startIndex)")
+    )
     override fun speak(
         text: String,
         utteranceId: String,
@@ -77,11 +80,15 @@ public class TtsClientPreview internal constructor() : TtsClient() {
         notImplementedMessage(name = "navigateInUtterance")
     }
 
+    override fun getSequenceForUtterance(utteranceId: String): Int {
+        notImplementedMessage(name = "getSequenceForUtterance")
+        return Int.MIN_VALUE
+    }
+
 
     override fun stopOnDispose() {
         notImplementedMessage(name = "stopOnDispose")
     }
-
 
 
     /**

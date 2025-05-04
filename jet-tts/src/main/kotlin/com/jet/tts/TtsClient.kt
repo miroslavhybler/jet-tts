@@ -34,12 +34,13 @@ import java.util.Locale
  * ## Navigation Feature
  * It is possible to "navigate" in utterance when `ttsClient.isSpeaking == true`, by clicking into
  * [TextTts] client will navigate speech by clicked word.
+ * @since 1.0.0
  * @author Miroslav Hýbler <br>
  * created on 13.03.2025
  * @see TtsClientImpl
  */
 @Keep
-public abstract class TtsClient {
+public abstract class TtsClient internal constructor() {
 
     /**
      * Specifies how the text it [TextTts] will be highlighted.
@@ -51,14 +52,24 @@ public abstract class TtsClient {
         /**
          * Mode to highlight only the spoken sequence out of the spoken content. This would be a
          * single word in 99% of the time. The other cases are like spelling by characters.
+         * @since 1.0.0
          */
         SPOKEN_WORD,
 
         /**
          * Mode to highlight the spoken range from the beginning of the content until currently
          * spoken word.
+         * @since 1.0.0
          */
-        SPOKEN_RANGE_FROM_BEGINNING;
+        SPOKEN_RANGE_FROM_BEGINNING,
+
+
+        /**
+         * Mode to highlight the spoken range from the beginning of the content until currently
+         * spoken word including also previous utterances.
+         * @since 1.0.0
+         */
+        SPOKEN_RANGE_FROM_BEGINNING_INCLUDING_PREVIOUS_UTTERANCES;
     }
 
 
@@ -156,6 +167,7 @@ public abstract class TtsClient {
         startIndex: Int = 0,
     ): Unit
 
+
     /**
      * Flushes previous queue (if there was) and creates new one. Calls a [speak] with [TextToSpeech.QUEUE_FLUSH].
      * @param text Text to be spoken.
@@ -218,5 +230,18 @@ public abstract class TtsClient {
         startIndex: Int,
     ): Unit
 
+
+    /**
+     * Util function to get sequence (index) of an utterance.
+     * @param utteranceId Id of utterance to get sequence for.
+     * @return Sequence (index) of the utterance with given [utteranceId] or [Int.MAX_VALUE] when
+     * utterance is not found. This is used for [HighlightMode.SPOKEN_RANGE_FROM_BEGINNING_INCLUDING_PREVIOUS_UTTERANCES]
+     * when [TextTts] has to highlight all "previous" utterances too, so returning [Int.MAX_VALUE] by
+     * default won't cause unwanted highlights.
+     * @since 1.0.0
+     */
+    internal abstract fun getSequenceForUtterance(
+        utteranceId: String,
+    ): Int
 
 }

@@ -10,8 +10,9 @@ import androidx.compose.runtime.Immutable
 
 
 /**
- * Holding progress in utterance spoken by [TtsClient].
- * @param utteranceId Unique id of the utterance.
+ * Holding progress in actual utterance spoken by [TtsClient].
+ * @param utteranceId Unique id of the actual utterance.
+ * @param sequence Sequence of the actual utterance.
  * @param range Index range of text to highlight in [TextTts], range is defined by [TtsClient.HighlightMode],
  * see [TtsClient.utteranceRange] for more details.
  * @author Miroslav Hýbler <br>
@@ -22,6 +23,7 @@ import androidx.compose.runtime.Immutable
 @Immutable
 public data class UtteranceProgress internal constructor(
     val utteranceId: String,
+    val sequence: Int,
     private val range: IntRange,
 ) {
 
@@ -34,6 +36,7 @@ public data class UtteranceProgress internal constructor(
         val EMPTY: UtteranceProgress = UtteranceProgress(
             range = IntRange.EMPTY,
             utteranceId = "",
+            sequence = -1,
         )
     }
 

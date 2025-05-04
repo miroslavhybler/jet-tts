@@ -112,7 +112,8 @@ fun ToggleHighlightModeScreen() {
                     Button(
                         onClick = {
                             ttsClient.highlightMode = when (ttsClient.highlightMode) {
-                                TtsClient.HighlightMode.SPOKEN_RANGE_FROM_BEGINNING ->
+                                TtsClient.HighlightMode.SPOKEN_RANGE_FROM_BEGINNING,
+                                TtsClient.HighlightMode.SPOKEN_RANGE_FROM_BEGINNING_INCLUDING_PREVIOUS_UTTERANCES ->
                                     TtsClient.HighlightMode.SPOKEN_WORD
 
                                 TtsClient.HighlightMode.SPOKEN_WORD ->

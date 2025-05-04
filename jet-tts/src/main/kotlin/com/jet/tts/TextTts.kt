@@ -110,7 +110,11 @@ fun TextTts(
     val density = LocalDensity.current
 
     //Extra offset from top of the screen so highlighted text will not be at the top corner of the screen
-    val extraOffset = remember { with(density) { 128.dp.toPx() }.toInt() }
+    val extraOffset = remember { with(receiver = density) { 128.dp.toPx() }.toInt() }
+
+    val sequence = remember(key1 = utteranceId, key2 = range) {
+        ttsClient.getSequenceForUtterance(utteranceId = utteranceId)
+    }
 
     var layoutCoordinates: LayoutCoordinates? by remember { mutableStateOf(value = null) }
     var textLayout: TextLayoutResult? by remember { mutableStateOf(value = null) }
@@ -122,6 +126,8 @@ fun TextTts(
                 highlightStyle = highlightStyle,
                 normalStyle = style,
                 utteranceId = utteranceId,
+                highlightMode = ttsClient.highlightMode,
+                sequence = sequence,
             )
         )
     }
@@ -184,6 +190,8 @@ fun TextTts(
             highlightStyle = highlightStyle,
             normalStyle = style,
             utteranceId = utteranceId,
+            highlightMode = ttsClient.highlightMode,
+            sequence = sequence,
         )
         innerText = newText
 
@@ -200,7 +208,7 @@ fun TextTts(
 
     DisposableEffect(key1 = Unit) {
         onDispose {
-            if(utteranceId ==range.utteranceId) {
+            if (utteranceId == range.utteranceId) {
                 ttsClient.stopOnDispose()
             }
         }
@@ -310,6 +318,9 @@ fun TextTts(
 
     //Extra offset from top of the screen so highlighted text will not be at the top corner of the screen
     val extraOffset = remember { with(density) { 128.dp.toPx() }.toInt() }
+    val sequence = remember(key1 = utteranceId) {
+        ttsClient.getSequenceForUtterance(utteranceId = utteranceId)
+    }
 
     var layoutCoordinates: LayoutCoordinates? by remember { mutableStateOf(value = null) }
     var textLayout: TextLayoutResult? by remember { mutableStateOf(value = null) }
@@ -321,6 +332,8 @@ fun TextTts(
                 highlightStyle = highlightStyle,
                 normalStyle = style,
                 utteranceId = utteranceId,
+                highlightMode = ttsClient.highlightMode,
+                sequence = sequence,
             )
         )
     }
@@ -383,6 +396,8 @@ fun TextTts(
             highlightStyle = highlightStyle,
             normalStyle = style,
             utteranceId = utteranceId,
+            highlightMode = ttsClient.highlightMode,
+            sequence = sequence,
         )
         innerText = newText
 
@@ -399,7 +414,7 @@ fun TextTts(
 
     DisposableEffect(key1 = Unit) {
         onDispose {
-            if(utteranceId ==range.utteranceId) {
+            if (utteranceId == range.utteranceId) {
                 ttsClient.stopOnDispose()
             }
         }
@@ -440,7 +455,6 @@ fun TextTts(
 }
 
 
-
 /**
  * @param text Text to be annotated by [TtsClient.highlightMode].
  * @param range Range of the text to be highlighted.
@@ -457,18 +471,41 @@ private fun highlightText(
     normalStyle: TextStyle,
     highlightStyle: TextStyle,
     utteranceId: String,
+    highlightMode: HighlightMode,
+    sequence: Int,
 ): AnnotatedString {
     val normalSpanStyle = normalStyle.toSpanStyle()
-    if (range == IntRange.EMPTY || utteranceId != range.utteranceId) {
-        //Range is empty or text is not for the current utterance. When utteranceId doesn't match,
-        //it means that TTs client is probably speaking another utterance now.
 
+    if (range == IntRange.EMPTY) {
+        //Range is empty, there is no utterance in progress
         return buildAnnotatedString {
             withStyle(style = normalSpanStyle) {
                 append(text = text)
             }
         }
     }
+
+    if (utteranceId != range.utteranceId) {
+        //Text is not for the current utterance.
+        return if (
+            sequence < range.sequence
+            && highlightMode == HighlightMode.SPOKEN_RANGE_FROM_BEGINNING_INCLUDING_PREVIOUS_UTTERANCES
+        ) {
+            //Text is "previous" utterance, highlight all the text because of highlightMode
+            buildAnnotatedString {
+                withStyle(style = highlightStyle.toSpanStyle()) {
+                    append(text = text)
+                }
+            }
+        } else {
+            buildAnnotatedString {
+                withStyle(style = normalSpanStyle) {
+                    append(text = text)
+                }
+            }
+        }
+    }
+
     val highlightSpanStyle = highlightStyle.toSpanStyle()
 
     return try {
@@ -499,7 +536,6 @@ private fun highlightText(
 }
 
 
-
 /**
  * @param text Text to be annotated by [TtsClient.highlightMode] while also keeping original styles
  * and annotations.
@@ -508,6 +544,7 @@ private fun highlightText(
  * @param highlightStyle Style of the text that is highlighted.
  * @param utteranceId Unique identifier of the utterance. When text displayed is not for the current
  * utterance, text will not be highlighted.
+ * @param highlightMode [TtsClient.HighlightMode] of the client.
  * @return Annotated string with highlighted text.
  * @since 1.0.0
  */
@@ -517,18 +554,41 @@ private fun highlightText(
     normalStyle: TextStyle,
     highlightStyle: TextStyle,
     utteranceId: String,
+    highlightMode: HighlightMode,
+    sequence: Int,
 ): AnnotatedString {
     val normalSpanStyle = normalStyle.toSpanStyle()
-    if (range == IntRange.EMPTY || utteranceId != range.utteranceId) {
-        //Range is empty or text is not for the current utterance. When utteranceId doesn't match,
-        //it means that TTs client is probably speaking another utterance now.
 
+    if (range == IntRange.EMPTY) {
+        //Range is empty, there is no utterance in progress
         return buildAnnotatedString {
             withStyle(style = normalSpanStyle) {
                 append(text = text)
             }
         }
     }
+
+    if (utteranceId != range.utteranceId) {
+        //Text is not for the current utterance.
+        return if (
+            sequence < range.sequence
+            && highlightMode == HighlightMode.SPOKEN_RANGE_FROM_BEGINNING_INCLUDING_PREVIOUS_UTTERANCES
+        ) {
+            //Text is "previous" utterance, highlight all the text because of highlightMode
+            buildAnnotatedString {
+                withStyle(style = highlightStyle.toSpanStyle()) {
+                    append(text = text)
+                }
+            }
+        } else {
+            buildAnnotatedString {
+                withStyle(style = normalSpanStyle) {
+                    append(text = text)
+                }
+            }
+        }
+    }
+
     val highlightSpanStyle = highlightStyle.toSpanStyle()
 
     return try {
@@ -557,8 +617,6 @@ private fun highlightText(
         )
     }
 }
-
-
 
 
 /**

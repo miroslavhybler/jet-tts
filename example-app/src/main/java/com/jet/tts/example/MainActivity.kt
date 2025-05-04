@@ -35,7 +35,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
             val ttsClient = rememberTtsClient(
-                highlightMode = TtsClient.HighlightMode.SPOKEN_RANGE_FROM_BEGINNING,
+                highlightMode = TtsClient.HighlightMode.SPOKEN_RANGE_FROM_BEGINNING_INCLUDING_PREVIOUS_UTTERANCES,
                 onInitialized = { ttsClient ->
                     ttsClient.setLanguage(language = Locale.US)
                 },
