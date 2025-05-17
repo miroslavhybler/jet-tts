@@ -60,7 +60,7 @@ public class TtsClientPreview internal constructor() : TtsClient() {
 
     @Deprecated(
         message = "Will be Internal in the future, use flushAndSpeak() or add() instead.",
-        replaceWith = ReplaceWith("flushAndSpeak(text, utteranceId, params, startIndex)")
+        replaceWith = ReplaceWith(expression = "flushAndSpeak(text, utteranceId, params, startIndex)")
     )
     override fun speak(
         text: String,

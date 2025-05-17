@@ -142,7 +142,11 @@ internal class TtsClientImpl internal constructor(
             override fun onStart(utteranceId: String) {
                 Log.d("TtsClient", "onStart: $utteranceId")
                 currentUtteranceId = utteranceId
-                mUtteranceRange.value = UtteranceProgress.EMPTY
+                mUtteranceRange.value = UtteranceProgress(
+                    utteranceId = utteranceId,
+                    range = IntRange.EMPTY,
+                    sequence = getSequenceForUtterance(utteranceId = utteranceId),
+                )
                 isSpeaking = true
             }
 
@@ -320,7 +324,7 @@ internal class TtsClientImpl internal constructor(
      */
     @Deprecated(
         message = "Will be Internal in the future, use flushAndSpeak() or add() instead.",
-        replaceWith = ReplaceWith("flushAndSpeak(text, utteranceId, params, startIndex)"),
+        replaceWith = ReplaceWith(expression = "flushAndSpeak(text, utteranceId, params, startIndex)"),
     )
     public override fun speak(
         text: String,
@@ -423,6 +427,14 @@ internal class TtsClientImpl internal constructor(
                     startIndex = utterance.currentIndexThreshold,
                 )
                 return
+            } else {
+                speak(
+                    text = text,
+                    utteranceId = utteranceId,
+                    queueMode = QueueMode.ADD,
+                    params = params,
+                    startIndex = startIndex,
+                )
             }
 
         } else if (!contentMap.contains(key = utteranceId)) {
@@ -492,7 +504,14 @@ internal class TtsClientImpl internal constructor(
         this.isInDisposeState = true
         this.tts.stop()
         this.isSpeaking = false
+        this.contentMap.clear()
     }
+
+
+    internal fun clearContent(): Unit {
+        this.contentMap.clear()
+    }
+
 
 
     /**
@@ -641,14 +660,12 @@ internal class TtsClientImpl internal constructor(
         val threshold = utterance.currentIndexThreshold
         return when (mode) {
             HighlightMode.SPOKEN_WORD -> {
-                Log.d("TtsClient", "getRange: $start - $end")
                 IntRange(start = start + threshold, endInclusive = end + threshold)
             }
 
             HighlightMode.SPOKEN_RANGE_FROM_BEGINNING,
             HighlightMode.SPOKEN_RANGE_FROM_BEGINNING_INCLUDING_PREVIOUS_UTTERANCES -> {
                 //We want to highlight text from beginning, so start is 0
-                Log.d("TtsClient", "getRange: 0 - ${end + threshold}")
                 IntRange(start = 0, endInclusive = end + threshold)
             }
         }

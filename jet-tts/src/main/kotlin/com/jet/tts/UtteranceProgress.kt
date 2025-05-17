@@ -50,7 +50,15 @@ public data class UtteranceProgress internal constructor(
 
     /**
      * Exclusive end index of the [range].
+     * @since 1.0.0
      */
     val last: Int
         get() = range.last
+
+
+    /**
+     * @since 1.0.0
+     */
+    val isTextRangeEmpty: Boolean
+        get() = range == IntRange.EMPTY
 }

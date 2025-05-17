@@ -4,10 +4,18 @@ package com.jet.tts.example
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -43,7 +51,6 @@ fun HomeScreen(
                 verticalArrangement = Arrangement.spacedBy(space = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-
 
                 Button(
                     onClick = {
@@ -91,6 +98,14 @@ fun HomeScreen(
                     }
                 ) {
                     Text(text = "Original string annotated example")
+                }
+
+                Button(
+                    onClick = {
+                        navController.navigate(route = "lazy")
+                    }
+                ) {
+                    Text(text = "LazyColumn example")
                 }
             }
         },

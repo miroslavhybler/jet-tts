@@ -1,6 +1,5 @@
 package com.jet.tts.example.examples
 
-import android.speech.tts.TextToSpeech
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -21,13 +20,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.jet.tts.TextTts
 import com.jet.tts.TtsClient
 import com.jet.tts.example.LocalTtsClient
 import com.jet.tts.example.R
 import com.jet.tts.rememberTtsClient
-import java.util.Locale
 
 
 private const val content: String = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
@@ -88,7 +85,7 @@ fun ScrollExampleScreen(
                     ttsClient = ttsClient,
                     utteranceId = "ScrollExampleScreen_1",
                     style = MaterialTheme.typography.headlineLarge,
-                    scrollState = scrollState, //ScrollState for autoscroll feature
+                    scrollableState = scrollState, //ScrollState for autoscroll feature
                 )
 
                 Image(
@@ -104,7 +101,7 @@ fun ScrollExampleScreen(
                     ttsClient = ttsClient,
                     utteranceId = "ScrollExampleScreen_2",
                     style = MaterialTheme.typography.headlineLarge,
-                    scrollState = scrollState, //ScrollState for autoscroll feature
+                    scrollableState = scrollState, //ScrollState for autoscroll feature
                 )
                 Image(
                     modifier = Modifier
@@ -118,7 +115,7 @@ fun ScrollExampleScreen(
                     ttsClient = ttsClient,
                     utteranceId = "ScrollExampleScreen_3",
                     style = MaterialTheme.typography.headlineLarge,
-                    scrollState = scrollState, //ScrollState for autoscroll feature
+                    scrollableState = scrollState, //ScrollState for autoscroll feature
                 )
 
                 Spacer(modifier = Modifier.height(height = 32.dp))

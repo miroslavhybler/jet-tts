@@ -23,7 +23,7 @@ Jet Tts is a lightweight [Text to Speech](https://android-developers.googleblog.
 Since `TtsClient` is using `Context` it's recommended to use single `TtsClient` instance in your application, you can use [CompositionLocalProvider](https://developer.android.com/develop/ui/compose/compositionlocal).
 
 ```kotlin
-//Define CompositionLocalProvider that will provide c
+//Define CompositionLocalProvider that will provide client
 val LocalTtsClient: ProvidableCompositionLocal<TtsClient> = compositionLocalOf(
     defaultFactory = { error("Client not available") }
 )
@@ -160,6 +160,10 @@ Column() {
     }
 }
 ```
+
+### Tips
+* Always use `flushAndSpeak` when you want to use tts on different screen than before, make sure the old queue is flushed properly.
+* Use tts with Activities or [Compose Navigation](https://developer.android.com/develop/ui/compose/navigation) to ensure proper internal functionality.
 
 ### Warnings (What not to do)
 * Do not use different string in UI and in the client

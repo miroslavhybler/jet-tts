@@ -1,6 +1,5 @@
 package com.jet.tts.example.examples
 
-import android.speech.tts.TextToSpeech
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,7 +13,6 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -106,7 +104,7 @@ fun ArticleExampleScreen(
                 TextTts(
                     text = article.title,
                     ttsClient = ttsClient,
-                    scrollState = scrollState, //ScrollState for autoscroll feature
+                    scrollableState = scrollState, //ScrollState for autoscroll feature
                     utteranceId = "ArticleExampleScreen_title",
                     style = MaterialTheme.typography.headlineMedium,
                 )
@@ -114,7 +112,7 @@ fun ArticleExampleScreen(
                 TextTts(
                     text = article.description,
                     ttsClient = ttsClient,
-                    scrollState = scrollState, //ScrollState for autoscroll feature
+                    scrollableState = scrollState, //ScrollState for autoscroll feature
                     utteranceId = "ArticleExampleScreen_desc",
                     style = MaterialTheme.typography.bodyLarge,
                 )
@@ -133,7 +131,7 @@ fun ArticleExampleScreen(
                 TextTts(
                     text = article.content,
                     ttsClient = ttsClient,
-                    scrollState = scrollState, //ScrollState for autoscroll feature
+                    scrollableState = scrollState, //ScrollState for autoscroll feature
                     utteranceId = "ArticleExampleScreen_content",
                     style = MaterialTheme.typography.bodyLarge,
                 )
@@ -152,7 +150,7 @@ fun ArticleExampleScreen(
                 TextTts(
                     text = article.content2,
                     ttsClient = ttsClient,
-                    scrollState = scrollState, //ScrollState for autoscroll feature
+                    scrollableState = scrollState, //ScrollState for autoscroll feature
                     utteranceId = "ArticleExampleScreen_content2",
                     style = MaterialTheme.typography.bodyLarge,
                 )
@@ -165,7 +163,7 @@ fun ArticleExampleScreen(
                     if (ttsClient.isSpeaking) {
                         ttsClient.stop()
                     } else {
-                        ttsClient.add(
+                        ttsClient.flushAndSpeak(
                             text = article.title,
                             utteranceId = "ArticleExampleScreen_title",
                         )

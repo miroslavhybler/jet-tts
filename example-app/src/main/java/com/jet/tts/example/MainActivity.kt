@@ -13,6 +13,7 @@ import androidx.navigation.compose.rememberNavController
 import com.jet.tts.TtsClient
 import com.jet.tts.example.examples.AnnotatedStringExampleScreen
 import com.jet.tts.example.examples.ArticleExampleScreen
+import com.jet.tts.example.examples.LazyColumnExampleScreen
 import com.jet.tts.example.examples.MultipleTextsExampleScreen
 import com.jet.tts.example.examples.ScrollExampleScreen
 import com.jet.tts.example.examples.SingleTextExampleScreen
@@ -71,6 +72,9 @@ class MainActivity : ComponentActivity() {
                         }
                         composable(route = "annotated") {
                             AnnotatedStringExampleScreen()
+                        }
+                        composable(route = "lazy") {
+                            LazyColumnExampleScreen()
                         }
                     }
                 }
