@@ -1,15 +1,10 @@
 package com.jet.tts
 
-import android.util.Log
 import androidx.annotation.Keep
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.gestures.ScrollableState
-import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.interaction.collectIsDraggedAsState
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
@@ -43,9 +38,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LifecycleEventEffect
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.jet.tts.TtsClient.HighlightMode
 
 
@@ -77,7 +69,7 @@ import com.jet.tts.TtsClient.HighlightMode
  * [TtsClient.speak].
  * @param ttsClient [TtsClient] instance used for [android.speech.tts.TextToSpeech] feature.
  * @param highlightStyle [TextStyle] used for highlighting text by [TtsClient.highlightMode].
- * @param scrollableState When the text is longer than the screen, you can provide [ScrollState] to
+ * @param scrollState When the text is longer than the screen, you can provide [ScrollState] to
  * enable scroll feature (requires api >= 26), [TextTts] will apply slow scroll animation to keep
  * highlighted text visible as it goes down through the [text].
  * @see [Text] for other parameters docs.
@@ -87,12 +79,13 @@ import com.jet.tts.TtsClient.HighlightMode
  */
 @Composable
 @Keep
+@Deprecated(message = "Use TextTts with scrollableState instead of scrollState")
 fun TextTts(
     modifier: Modifier = Modifier,
     text: String,
     utteranceId: String,
     ttsClient: TtsClient,
-    scrollableState: ScrollableState? = null,
+    scrollState: ScrollState? = null,
     color: Color = Color.Unspecified,
     fontSize: TextUnit = TextUnit.Unspecified,
     fontStyle: FontStyle? = null,
@@ -143,18 +136,46 @@ fun TextTts(
     var currentSpokenLine by remember { mutableIntStateOf(value = 0) }
 
 
+    /**
+     * Tries to scroll to the line of text that is currently spoken by [TtsClient] when conditions are met:
+     * * Current [range]'s utteranceId matches [utteranceId]
+     * * [TtsClient.isSpeaking] is true.
+     * * [scrollState] is not null
+     * * New scroll value is greater than the current scroll value
+     * @since 1.0.0
+     */
+    suspend fun tryScrollToCurrentLine(): Unit {
+        if (range.utteranceId != utteranceId) return
+        if (scrollState == null) return
+        val textLayoutResult = textLayout ?: return
+        val layout = layoutCoordinates ?: return
+
+        // Y position of the line in text
+        val lineTop = textLayoutResult.getLineTop(lineIndex = currentSpokenLine)
+        // Convert to visible window coordinates
+        val y = layout.localToWindow(relativeToLocal = Offset(x = 0f, y = lineTop)).y
+        val scrollTo = y + scrollState.value - extraOffset
+        if (ttsClient.isSpeaking && scrollTo <= scrollState.value) {
+            //For best UX scroll should always go down when client is speaking
+            return
+        }
+
+        //Scrolling to the bottom of the line, assuring that spoken text is always visible
+        //on the screen
+        scrollState.animateScrollTo(
+            value = scrollTo.toInt(),
+            animationSpec = tween(
+                durationMillis = 2000,
+                easing = LinearEasing,
+            )
+        )
+    }
+
+
     //Launched effect to scroll to the current utterance to assure that currently spoken text is
     //visible even when there is some content between utterances
     LaunchedEffect(key1 = range.utteranceId) {
-        tryScrollToCurrentLine(
-            range = range,
-            utteranceId = utteranceId,
-            scrollableState = scrollableState,
-            textLayout = textLayout,
-            layoutCoordinates = layoutCoordinates,
-            currentSpokenLine = currentSpokenLine,
-            extraOffset = extraOffset,
-        )
+        tryScrollToCurrentLine()
     }
 
     //Effect to highlight text when range changes and also scroll to currently spoken text
@@ -182,34 +203,21 @@ fun TextTts(
 
     //Effect to handle scroll to the current line
     LaunchedEffect(key1 = currentSpokenLine) {
-        tryScrollToCurrentLine(
-            range = range,
-            utteranceId = utteranceId,
-            scrollableState = scrollableState,
-            textLayout = textLayout,
-            layoutCoordinates = layoutCoordinates,
-            currentSpokenLine = currentSpokenLine,
-            extraOffset = extraOffset,
-        )
+        tryScrollToCurrentLine()
     }
 
-    //TODO problem, on Stop works great for lazyColumn but on configration change content is cleared
-    LifecycleEventEffect(event = Lifecycle.Event.ON_STOP) {
-        //Assuring that content added in composable screen is cleared. This must be done
-        //due to "resume" feature so "old" content won't remain saved.
-        (ttsClient as? TtsClientImpl)?.clearContent()
+    DisposableEffect(key1 = Unit) {
+        onDispose {
+            if (utteranceId == range.utteranceId) {
+                ttsClient.stopOnDispose()
+            }
+        }
     }
-
-    TtsDisposableEffect(
-        scrollableState = scrollableState,
-        utteranceId = utteranceId,
-        ttsClient = ttsClient,
-    )
 
 
     Text(
         modifier = modifier
-            .ttsClickModifier(
+            .ttsClickModifierOld(
                 textLayout = textLayout,
                 ttsClient = ttsClient,
                 utteranceId = utteranceId,
@@ -279,12 +287,13 @@ fun TextTts(
  */
 @Composable
 @Keep
+@Deprecated(message = "Use TextTts with scrollableState instead of scrollState")
 fun TextTts(
     modifier: Modifier = Modifier,
     text: AnnotatedString,
     utteranceId: String,
     ttsClient: TtsClient,
-    scrollableState: ScrollableState? = null,
+    scrollState: ScrollState? = null,
     color: Color = Color.Unspecified,
     fontSize: TextUnit = TextUnit.Unspecified,
     fontStyle: FontStyle? = null,
@@ -334,18 +343,46 @@ fun TextTts(
     var currentSpokenLine by remember { mutableIntStateOf(value = 0) }
 
 
+    /**
+     * Tries to scroll to the line of text that is currently spoken by [TtsClient] when conditions are met:
+     * * Current [range]'s utteranceId matches [utteranceId]
+     * * [TtsClient.isSpeaking] is true.
+     * * [scrollState] is not null
+     * * New scroll value is greater than the current scroll value
+     * @since 1.0.0
+     */
+    suspend fun tryScrollToCurrentLine(): Unit {
+        if (range.utteranceId != utteranceId) return
+        if (scrollState == null) return
+        val textLayoutResult = textLayout ?: return
+        val layout = layoutCoordinates ?: return
+
+        // Y position of the line in text
+        val lineTop = textLayoutResult.getLineTop(lineIndex = currentSpokenLine)
+        // Convert to visible window coordinates
+        val y = layout.localToWindow(relativeToLocal = Offset(x = 0f, y = lineTop)).y
+        val scrollTo = y + scrollState.value - extraOffset
+        if (ttsClient.isSpeaking && scrollTo <= scrollState.value) {
+            //For best UX scroll should always go down when client is speaking
+            return
+        }
+
+        //Scrolling to the bottom of the line, assuring that spoken text is always visible
+        //on the screen
+        scrollState.animateScrollTo(
+            value = scrollTo.toInt(),
+            animationSpec = tween(
+                durationMillis = 2000,
+                easing = LinearEasing,
+            )
+        )
+    }
+
+
     //Launched effect to scroll to the current utterance to assure that currently spoken text is
     //visible even when there is some content between utterances
     LaunchedEffect(key1 = range.utteranceId) {
-        tryScrollToCurrentLine(
-            range = range,
-            utteranceId = utteranceId,
-            scrollableState = scrollableState,
-            textLayout = textLayout,
-            layoutCoordinates = layoutCoordinates,
-            currentSpokenLine = currentSpokenLine,
-            extraOffset = extraOffset,
-        )
+        tryScrollToCurrentLine()
     }
 
     //Effect to highlight text when range changes and also scroll to currently spoken text
@@ -373,27 +410,21 @@ fun TextTts(
 
     //Effect to handle scroll to the current line
     LaunchedEffect(key1 = currentSpokenLine) {
-        tryScrollToCurrentLine(
-            range = range,
-            utteranceId = utteranceId,
-            scrollableState = scrollableState,
-            textLayout = textLayout,
-            layoutCoordinates = layoutCoordinates,
-            currentSpokenLine = currentSpokenLine,
-            extraOffset = extraOffset,
-        )
+        tryScrollToCurrentLine()
     }
 
-    TtsDisposableEffect(
-        scrollableState = scrollableState,
-        utteranceId = utteranceId,
-        ttsClient = ttsClient,
-    )
+    DisposableEffect(key1 = Unit) {
+        onDispose {
+            if (utteranceId == range.utteranceId) {
+                ttsClient.stopOnDispose()
+            }
+        }
+    }
 
 
     Text(
         modifier = modifier
-            .ttsClickModifier(
+            .ttsClickModifierOld(
                 textLayout = textLayout,
                 ttsClient = ttsClient,
                 utteranceId = utteranceId,
@@ -446,7 +477,7 @@ private fun highlightText(
 ): AnnotatedString {
     val normalSpanStyle = normalStyle.toSpanStyle()
 
-    if (range == UtteranceProgress.EMPTY) {
+    if (range == IntRange.EMPTY) {
         //Range is empty, there is no utterance in progress
         return buildAnnotatedString {
             withStyle(style = normalSpanStyle) {
@@ -476,15 +507,8 @@ private fun highlightText(
         }
     }
 
-    if (range.isTextRangeEmpty) {
-        return buildAnnotatedString {
-            withStyle(style = normalSpanStyle) {
-                append(text = text)
-            }
-        }
-    }
-
     val highlightSpanStyle = highlightStyle.toSpanStyle()
+
     return try {
         buildAnnotatedString {
             if (range.first > 0) {
@@ -565,13 +589,7 @@ private fun highlightText(
             }
         }
     }
-    if (range.isTextRangeEmpty) {
-        return buildAnnotatedString {
-            withStyle(style = normalSpanStyle) {
-                append(text = text)
-            }
-        }
-    }
+
     val highlightSpanStyle = highlightStyle.toSpanStyle()
 
     return try {
@@ -606,7 +624,7 @@ private fun highlightText(
  * [Modifier] for handling navigation in utterance when [TtsClient.isSpeaking] is true.
  * @since 1.0.0
  */
-internal fun Modifier.ttsClickModifier(
+private fun Modifier.ttsClickModifierOld(
     textLayout: TextLayoutResult?,
     ttsClient: TtsClient,
     utteranceId: String,
