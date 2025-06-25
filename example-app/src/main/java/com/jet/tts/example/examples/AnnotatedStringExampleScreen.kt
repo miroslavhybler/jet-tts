@@ -24,11 +24,12 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.jet.tts.TextTts
+import com.jet.tts.old.TextTts
 import com.jet.tts.TtsClient
 import com.jet.tts.example.LocalTtsClient
 import com.jet.tts.example.R
 import com.jet.tts.rememberTtsClient
+import com.jet.tts.rememberTtsState
 
 
 private val content: AnnotatedString = buildAnnotatedString {
@@ -70,6 +71,14 @@ private val content: AnnotatedString = buildAnnotatedString {
 fun AnnotatedStringExampleScreen(
     ttsClient: TtsClient = LocalTtsClient.current
 ) {
+
+    //Must use AnnotatedString.toString()
+    val ttsState = rememberTtsState(
+        client = ttsClient,
+        utterances = listOf(
+            "AnnotatedStringExampleScreen_content" to "$content",
+        )
+    )
 
     LaunchedEffect(key1 = Unit) {
         ttsClient.highlightMode = TtsClient.HighlightMode.SPOKEN_WORD

@@ -21,7 +21,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = true
-            signingConfig= signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("debug")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -35,6 +35,9 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+    kotlin {
+        jvmToolchain(jdkVersion = 11)
+    }
     buildFeatures {
         compose = true
     }
@@ -43,7 +46,7 @@ android {
 dependencies {
 
     implementation(project(":jet-tts"))
-    
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

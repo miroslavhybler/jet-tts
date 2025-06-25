@@ -22,11 +22,13 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.jet.tts.TextTts
+import com.jet.tts.old.TextTts
 import com.jet.tts.TtsClient
 import com.jet.tts.example.JetTtsExampleTheme
 import com.jet.tts.example.LocalTtsClient
 import com.jet.tts.example.R
 import com.jet.tts.rememberTtsClient
+import com.jet.tts.rememberTtsState
 
 
 /**
@@ -84,6 +86,19 @@ fun ArticleExampleScreen(
 ) {
 
     val scrollState = rememberScrollState()
+
+
+    val ttsState = rememberTtsState(
+        client = ttsClient,
+        utterances = listOf(
+            "ArticleExampleScreen_title" to article.title,
+            "ArticleExampleScreen_desc" to article.description,
+            "ArticleExampleScreen_content" to article.content,
+            "ArticleExampleScreen_content2" to article.content2
+        )
+    )
+
+
 
     Scaffold(
         topBar = {},

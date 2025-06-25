@@ -85,6 +85,7 @@ import com.jet.tts.TtsClient.HighlightMode
  * created on 04.02.2025
  * @since 1.0.0
  */
+//TODO overload with utterance?
 @Composable
 @Keep
 fun TextTts(
@@ -193,20 +194,6 @@ fun TextTts(
         )
     }
 
-    //TODO problem, on Stop works great for lazyColumn but on configration change content is cleared
-    LifecycleEventEffect(event = Lifecycle.Event.ON_STOP) {
-        //Assuring that content added in composable screen is cleared. This must be done
-        //due to "resume" feature so "old" content won't remain saved.
-        (ttsClient as? TtsClientImpl)?.clearContent()
-    }
-
-    TtsDisposableEffect(
-        scrollableState = scrollableState,
-        utteranceId = utteranceId,
-        ttsClient = ttsClient,
-    )
-
-
     Text(
         modifier = modifier
             .ttsClickModifier(
@@ -269,7 +256,7 @@ fun TextTts(
  * [TtsClient.speak].
  * @param ttsClient [TtsClient] instance used for [android.speech.tts.TextToSpeech] feature.
  * @param highlightStyle [TextStyle] used for highlighting text by [TtsClient.highlightMode].
- * @param scrollState When the text is longer than the screen, you can provide [ScrollState] to
+ * @param scrollableState When the text is longer than the screen, you can provide [ScrollState] to
  * enable scroll feature (requires api >= 26), [TextTts] will apply slow scroll animation to keep
  * highlighted text visible as it goes down through the [text].
  * @see [Text] for other parameters docs.
@@ -383,13 +370,6 @@ fun TextTts(
             extraOffset = extraOffset,
         )
     }
-
-    TtsDisposableEffect(
-        scrollableState = scrollableState,
-        utteranceId = utteranceId,
-        ttsClient = ttsClient,
-    )
-
 
     Text(
         modifier = modifier

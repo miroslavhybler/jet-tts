@@ -27,23 +27,24 @@ import java.util.Locale
  * See [HighlightMode].
  *
  * ### Autoscroll Feature (api >= 26)
- * By providing a [androidx.compose.foundation.ScrollState], [TextTts] can use it to autoscroll to
- * currently spoken line. Solution for [androidx.compose.foundation.lazy.LazyColumn] is not avaliable now.
+ * By providing a [androidx.compose.foundation.ScrollState], [com.jet.tts.old.TextTts] can use it to autoscroll to
+ * currently spoken line. Solution for [androidx.compose.foundation.lazy.LazyColumn] is not available now.
  * Use [rememberTtsClient] to get an instance of [com.jet.tts.TtsClient].
  *
  * ## Navigation Feature
  * It is possible to "navigate" in utterance when `ttsClient.isSpeaking == true`, by clicking into
- * [TextTts] client will navigate speech by clicked word.
+ * [com.jet.tts.old.TextTts] client will navigate speech by clicked word.
  * @since 1.0.0
  * @author Miroslav Hýbler <br>
  * created on 13.03.2025
  * @see TtsClientImpl
  */
+//TODO continue TtsState.kt impl and check functionality (scroll &lazy)
 @Keep
 public abstract class TtsClient internal constructor() {
 
     /**
-     * Specifies how the text it [TextTts] will be highlighted.
+     * Specifies how the text it [com.jet.tts.old.TextTts] will be highlighted.
      * @since 1.0.0
      */
     @Keep
@@ -123,7 +124,7 @@ public abstract class TtsClient internal constructor() {
 
 
     /**
-     * Range of text to highlight, collected by [TextTts]
+     * Range of text to highlight, collected by [com.jet.tts.old.TextTts]
      * @since 1.0.0
      */
     public abstract val utteranceRange: StateFlow<UtteranceProgress>
@@ -212,6 +213,13 @@ public abstract class TtsClient internal constructor() {
 
 
     /**
+     * TODO docs
+     * @since 1.0.0
+     */
+    internal abstract fun initWithState(stateHolder: TtsState): Unit
+
+
+    /**
      * Stops currently speaking text in [androidx.compose.runtime.DisposableEffect].
      * This is used instead of [stop] to capture [isSpeaking] state properly.
      * @since 1.0.0
@@ -236,7 +244,7 @@ public abstract class TtsClient internal constructor() {
      * @param utteranceId Id of utterance to get sequence for.
      * @return Sequence (index) of the utterance with given [utteranceId] or [Int.MAX_VALUE] when
      * utterance is not found. This is used for [HighlightMode.SPOKEN_RANGE_FROM_BEGINNING_INCLUDING_PREVIOUS_UTTERANCES]
-     * when [TextTts] has to highlight all "previous" utterances too, so returning [Int.MAX_VALUE] by
+     * when [com.jet.tts.old.TextTts] has to highlight all "previous" utterances too, so returning [Int.MAX_VALUE] by
      * default won't cause unwanted highlights.
      * @since 1.0.0
      */

@@ -1,6 +1,7 @@
 @file:Suppress(
     "DATA_CLASS_COPY_VISIBILITY_WILL_BE_CHANGED_WARNING",
     "UNCHECKED_CAST",
+    "RedundantVisibilityModifier",
 )
 @file:SuppressWarnings(
     "UNCHECKED_CAST"
@@ -10,14 +11,18 @@ package com.jet.tts
 
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.annotation.Keep
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.saveable.SaverScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.core.os.bundleOf
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 
 
 /**
- * Helper class used for saving/restoring state of [TtsClient] when composable is disposed. [com.jet.tts.TtsClientStateHolder]
+ * Helper class used for saving/restoring state of [TtsClient] when composable is disposed. [com.jet.tts.TtsState]
  * should always stay out of composition scope, that's why all parameters are mutable variables.
  * @param utteranceId Unique identifier of the current utterance.
  * @param startIndex Inclusive start index of the first character of the current utterance.
@@ -29,7 +34,7 @@ import androidx.core.os.bundleOf
  * @since 1.0.0
  */
 @Keep
-internal data class TtsClientStateHolder internal constructor(
+public data class TtsState internal constructor(
     var utteranceId: String = "",
     var startIndex: Int = 0,
     var endIndex: Int = 0,
@@ -57,7 +62,7 @@ internal data class TtsClientStateHolder internal constructor(
 
     /**
      * Captures current state of [TtsClient] and saves to be saved later by [Saver]. **[TtsClient]
-     * has to call [captureState] in all scenarios when some of the parameters [com.jet.tts.TtsClientStateHolder]
+     * has to call [captureState] in all scenarios when some of the parameters [com.jet.tts.TtsState]
      * has changed.**
      * @since 1.0.0
      */
@@ -77,10 +82,10 @@ internal data class TtsClientStateHolder internal constructor(
 
 
     /**
-     * Saver used for saving/restoring state of [TtsClient] using [com.jet.tts.TtsClientStateHolder].
+     * Saver used for saving/restoring state of [TtsClient] using [com.jet.tts.TtsState].
      * @since 1.0.0
      */
-    object Saver : androidx.compose.runtime.saveable.Saver<TtsClientStateHolder, Bundle> {
+    object Saver : androidx.compose.runtime.saveable.Saver<TtsState, Bundle> {
 
         //Keys for saving/restoring state
         private const val UTTERANCE_ID: String = "utteranceId"
@@ -89,19 +94,19 @@ internal data class TtsClientStateHolder internal constructor(
         private const val IS_SPEAKING: String = "isSpeaking"
         private const val MAP: String = "map"
 
-        override fun SaverScope.save(state: TtsClientStateHolder): Bundle {
+        override fun SaverScope.save(value: TtsState): Bundle {
             return bundleOf(
-                UTTERANCE_ID to state.utteranceId,
-                START_INDEX to state.startIndex,
-                END_INDEX to state.endIndex,
-                IS_SPEAKING to state.isSpeaking,
-                MAP to HashMap(state.map), //We need to create copy for state saver
+                UTTERANCE_ID to value.utteranceId,
+                START_INDEX to value.startIndex,
+                END_INDEX to value.endIndex,
+                IS_SPEAKING to value.isSpeaking,
+                MAP to HashMap(value.map), //We need to create copy for state saver
             )
         }
 
 
-        override fun restore(value: Bundle): TtsClientStateHolder {
-            val holder = TtsClientStateHolder(
+        override fun restore(value: Bundle): TtsState {
+            val holder = TtsState(
                 utteranceId = value.getString(UTTERANCE_ID, ""),
                 startIndex = value.getInt(START_INDEX, 0),
                 endIndex = value.getInt(END_INDEX, 0),
@@ -122,4 +127,62 @@ internal data class TtsClientStateHolder internal constructor(
             return holder
         }
     }
+}
+
+
+/**
+ * TODO docs
+ */
+@Composable
+public fun rememberTtsState(
+    client: TtsClient,
+    vararg utterances: Pair<String, String>,
+): TtsState {
+    return rememberTtsState(
+        client = client,
+        utterances = utterances.toList()
+    )
+}
+
+
+/**
+ * TODO docs
+ */
+@Composable
+public fun rememberTtsState(
+    client: TtsClient,
+    utterances: List<Pair<String, String>>,
+): TtsState {
+
+    val state = rememberSaveable(saver = TtsState.Saver) {
+        TtsState(
+            map = utterances
+                .mapIndexed(
+                    transform = { index, pair ->
+                        pair.first to Utterance(
+                            utteranceId = pair.first,
+                            content = pair.second,
+                            sequence = index,
+                            currentIndexThreshold = 0,
+                        )
+                    }
+                )
+                .associate { pair ->
+                    pair.first to pair.second
+                },
+        )
+    }
+
+    LifecycleEventEffect(event = Lifecycle.Event.ON_RESUME) {
+        client.initWithState(stateHolder = state)
+    }
+
+
+    DisposableEffect(key1 = Unit) {
+        onDispose {
+            client.stopOnDispose()
+        }
+    }
+
+    return state
 }

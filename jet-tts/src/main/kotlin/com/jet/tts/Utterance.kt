@@ -1,4 +1,7 @@
-@file:Suppress("DATA_CLASS_COPY_VISIBILITY_WILL_BE_CHANGED_WARNING")
+@file:Suppress(
+    "DATA_CLASS_COPY_VISIBILITY_WILL_BE_CHANGED_WARNING",
+    "RedundantVisibilityModifier",
+)
 
 package com.jet.tts
 
@@ -10,7 +13,7 @@ import kotlinx.parcelize.Parcelize
 
 /**
  * Represents single utterance of [TtsClient] created by [TtsClient.speak]. Implements [Parcelable]
- * to be stored in [TtsClientStateHolder].
+ * to be stored in [TtsState].
  * @param utteranceId Unique identifier of the utterance. This is required since without [utteranceId],
  * [UtteranceProgressListener] would not be called and text highlight feature would not work.
  * @param content Text that is gonna be spoken by [android.speech.tts.TextToSpeech].
@@ -26,7 +29,7 @@ import kotlinx.parcelize.Parcelize
  */
 @Keep
 @Parcelize
-internal data class Utterance internal constructor(
+public data class Utterance public constructor(
     val utteranceId: String,
     val content: String,
     val sequence: Int,

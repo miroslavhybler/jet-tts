@@ -35,16 +35,16 @@ import java.util.Locale
  * See [HighlightMode].
  *
  * ### Autoscroll Feature (api >= 26)
- * By providing a [androidx.compose.foundation.ScrollState], [TextTts] can use it to autoscroll to
+ * By providing a [androidx.compose.foundation.ScrollState], [com.jet.tts.old.TextTts] can use it to autoscroll to
  * currently spoken line. Solution for [androidx.compose.foundation.lazy.LazyColumn] is not avaliable now.
  * Use [rememberTtsClient] to get an instance of [com.jet.tts.TtsClient].
  *
  * ## Navigation Feature
  * It is possible to "navigate" in utterance when `ttsClient.isSpeaking == true`, by clicking into
- * [TextTts] client will navigate speech by clicked word.
+ * [com.jet.tts.old.TextTts] client will navigate speech by clicked word.
  *
  * @param context [Context] required for [TextToSpeech] initialization.
- * @param highlightMode Specifies how the text it [TextTts] will be highlighted, this works only for phones with api >= 26
+ * @param highlightMode Specifies how the text it [com.jet.tts.old.TextTts] will be highlighted, this works only for phones with api >= 26
  * @param stateHolder Helper variable to store state of [TtsClient].
  * @param onInitialized Callback to be called when [TextToSpeech] is initialized.
  * @param coroutineScope [CoroutineScope] used for waiting until TTS engine is initialized.
@@ -59,7 +59,6 @@ import java.util.Locale
 internal class TtsClientImpl internal constructor(
     context: Context,
     initialHighlightMode: TtsClient.HighlightMode,
-    internal val stateHolder: TtsClientStateHolder,
     private val onInitialized: (TtsClient) -> Unit = {},
     private val coroutineScope: CoroutineScope,
     private val isUsingResume: Boolean,
@@ -133,7 +132,7 @@ internal class TtsClientImpl internal constructor(
                     sequence = utterance.sequence,
                 )
 
-                stateHolder.captureState(client = this@TtsClientImpl)
+                state?.captureState(client = this@TtsClientImpl)
             }
 
             /**
@@ -191,8 +190,14 @@ internal class TtsClientImpl internal constructor(
 
 
     /**
+     * TODO docs
+     */
+    private var state: TtsState? = null
+
+
+    /**
      * True when [TtsClient] was stopped by [androidx.compose.runtime.DisposableEffect]. When true,
-     * client should avoid property changes so state from [stateHolder] can be saved by [TtsClientStateHolder.Saver].
+     * client should avoid property changes so state from [stateHolder] can be saved by [TtsState.Saver].
      * @since 1.0.0
      */
     internal var isInDisposeState: Boolean = false
@@ -258,7 +263,7 @@ internal class TtsClientImpl internal constructor(
         MutableStateFlow(value = UtteranceProgress.EMPTY)
 
     /**
-     * Range of text to highlight, collected by [TextTts]
+     * Range of text to highlight, collected by [com.jet.tts.old.TextTts]
      * @since 1.0.0
      */
     override val utteranceRange: StateFlow<UtteranceProgress> get() = mUtteranceRange.asStateFlow()
@@ -288,7 +293,7 @@ internal class TtsClientImpl internal constructor(
         }
 
         //Constructor is called in rememberTtsClient, so we try to restore state if it's available.
-        restoreState(stateHolder = stateHolder)
+        //   initWithState(stateHolder = stateHolder)
     }
 
 
@@ -382,8 +387,9 @@ internal class TtsClientImpl internal constructor(
         params: Bundle?,
         startIndex: Int,
     ) {
-        if (isUsingResume && stateHolder.isNotEmpty) {
-            val utterance = contentMap[stateHolder.utteranceId]
+        val mState = state
+        if (isUsingResume && mState != null && mState.isNotEmpty) {
+            val utterance = contentMap[mState.utteranceId]
             if (utterance != null) {
                 navigateInUtterance(
                     utteranceId = utterance.utteranceId,
@@ -419,8 +425,9 @@ internal class TtsClientImpl internal constructor(
         params: Bundle?,
         startIndex: Int,
     ) {
-        if (!isSpeaking && isUsingResume && stateHolder.isNotEmpty) {
-            val utterance = contentMap[stateHolder.utteranceId]
+        val mState = state
+        if (!isSpeaking && isUsingResume && mState != null && mState.isNotEmpty) {
+            val utterance = contentMap[mState.utteranceId]
             if (utterance != null) {
                 navigateInUtterance(
                     utteranceId = utterance.utteranceId,
@@ -458,10 +465,14 @@ internal class TtsClientImpl internal constructor(
         waitUntilInitialized {
             tts.stop()
             isSpeaking = false
-            stateHolder.captureState(client = this@TtsClientImpl)
-            if (stateHolder.isNotEmpty && isUsingResume) {
-                //Saving index threshold to resume playing from the same position where it ended
-                contentMap[stateHolder.utteranceId]?.currentIndexThreshold = stateHolder.startIndex
+            val mState = state
+
+            if (mState != null) {
+                mState.captureState(client = this@TtsClientImpl)
+                if (mState.isNotEmpty && isUsingResume) {
+                    //Saving index threshold to resume playing from the same position where it ended
+                    contentMap[mState.utteranceId]?.currentIndexThreshold = mState.startIndex
+                }
             }
         }
     }
@@ -500,16 +511,12 @@ internal class TtsClientImpl internal constructor(
      */
     internal override fun stopOnDispose(): Unit {
         Log.i("TtsClient", "stopOnDispose()")
-        this.stateHolder.captureState(client = this)
+        this.state?.captureState(client = this)
         this.isInDisposeState = true
         this.tts.stop()
         this.isSpeaking = false
         this.contentMap.clear()
-    }
-
-
-    internal fun clearContent(): Unit {
-        this.contentMap.clear()
+        this.state = null
     }
 
 
@@ -572,7 +579,7 @@ internal class TtsClientImpl internal constructor(
      * @param utteranceId Id of utterance to get sequence for.
      * @return Sequence (index) of the utterance with given [utteranceId] or [Int.MAX_VALUE] when
      * utterance is not found in [contentMap]. This is used for [HighlightMode.SPOKEN_RANGE_FROM_BEGINNING_INCLUDING_PREVIOUS_UTTERANCES]
-     * when [TextTts] has to highlight all "previous" utterances too, so returning [Int.MAX_VALUE] by
+     * when [com.jet.tts.old.TextTts] has to highlight all "previous" utterances too, so returning [Int.MAX_VALUE] by
      * default won't cause unwanted highlights.
      * @since 1.0.0
      */
@@ -588,12 +595,12 @@ internal class TtsClientImpl internal constructor(
 
 
     /**
-     * Restores state of [TtsClient] from saved [TtsClientStateHolder].
+     * Restores state of [TtsClient] from saved [TtsState].
      * @since 1.0.0
      */
-    internal fun restoreState(stateHolder: TtsClientStateHolder): Unit {
+    internal override fun initWithState(stateHolder: TtsState): Unit {
         Log.d("TtsClient", "restoreState: $stateHolder")
-
+        this.state = stateHolder
         if (stateHolder.isEmpty) {
             //Nothing to restore
             return

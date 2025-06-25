@@ -86,6 +86,11 @@ public class TtsClientPreview internal constructor() : TtsClient() {
     }
 
 
+    override fun initWithState(stateHolder: TtsState) {
+        notImplementedMessage(name = "initWithState")
+    }
+
+
     override fun stopOnDispose() {
         notImplementedMessage(name = "stopOnDispose")
     }

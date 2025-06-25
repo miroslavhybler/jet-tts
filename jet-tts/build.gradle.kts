@@ -33,6 +33,9 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+    kotlin {
+        jvmToolchain(jdkVersion = 11)
+    }
     buildFeatures {
         compose = true
     }

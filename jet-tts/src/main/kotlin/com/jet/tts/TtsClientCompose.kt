@@ -6,18 +6,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import kotlinx.coroutines.launch
 
 
 /**
- * @param highlightMode Specifies how the text it [TextTts] will be highlighted.
+ * @param highlightMode Specifies how the text it [com.jet.tts.old.TextTts] will be highlighted.
  * @param onInitialized Callback to be called when [TextToSpeech] is initialized for further
  * @param isUsingResume True when you want [TtsClient] to support a "resume" function allowing to
  * resume speech instead of being spoken from beginning.
@@ -43,10 +38,7 @@ fun rememberTtsClient(
     }
 
     val coroutineScope = rememberCoroutineScope()
-    val stateHolder: TtsClientStateHolder = rememberSaveable(
-        saver = TtsClientStateHolder.Saver,
-        init = { TtsClientStateHolder() },
-    )
+
 
 
     val client: TtsClientImpl = remember {
@@ -54,7 +46,6 @@ fun rememberTtsClient(
             context = context,
             initialHighlightMode = highlightMode,
             onInitialized = onInitialized,
-            stateHolder = stateHolder,
             coroutineScope = coroutineScope,
             isUsingResume=isUsingResume,
         )

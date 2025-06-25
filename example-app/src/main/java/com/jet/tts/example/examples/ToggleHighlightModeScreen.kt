@@ -28,10 +28,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
-import com.jet.tts.TextTts
+import com.jet.tts.old.TextTts
 import com.jet.tts.TtsClient
 import com.jet.tts.example.LocalTtsClient
 import com.jet.tts.example.R
+import com.jet.tts.rememberTtsState
 
 
 private const val content: String = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
@@ -46,6 +47,13 @@ private const val content: String = "Lorem ipsum dolor sit amet, consectetur adi
 @Composable
 fun ToggleHighlightModeScreen() {
     val ttsClient = LocalTtsClient.current
+
+    val ttsState = rememberTtsState(
+        client = ttsClient,
+        utterances = listOf(
+            "ToggleHighlightModeScreen_content" to content,
+        )
+    )
 
     LaunchedEffect(key1 = Unit) {
         ttsClient.highlightMode = TtsClient.HighlightMode.SPOKEN_RANGE_FROM_BEGINNING

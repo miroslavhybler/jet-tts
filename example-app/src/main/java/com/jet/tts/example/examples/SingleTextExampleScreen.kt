@@ -22,12 +22,13 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import com.jet.tts.TextTts
+import com.jet.tts.old.TextTts
 import com.jet.tts.TtsClient
 import com.jet.tts.example.LocalTtsClient
 import com.jet.tts.rememberTtsClient
 import java.util.Locale
 import com.jet.tts.example.R
+import com.jet.tts.rememberTtsState
 
 
 private val content: String =
@@ -44,9 +45,18 @@ private val content: String =
 fun SingleTextExampleScreen() {
     val ttsClient = LocalTtsClient.current
 
+    val ttsState = rememberTtsState(
+        client = ttsClient,
+        utterances = listOf(
+            "SingleTextExampleScreen_content" to content,
+        )
+    )
+
+
     LaunchedEffect(key1 = Unit) {
         ttsClient.highlightMode = TtsClient.HighlightMode.SPOKEN_RANGE_FROM_BEGINNING
     }
+
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -75,10 +85,9 @@ fun SingleTextExampleScreen() {
                     if (ttsClient.isSpeaking) {
                         ttsClient.stop()
                     } else {
-                        ttsClient.speak(
+                        ttsClient.flushAndSpeak(
                             text = content,
                             utteranceId = "SingleTextExampleScreen_content",
-                            queueMode = TtsClient.QueueMode.FLUSH,
                         )
                     }
                 },

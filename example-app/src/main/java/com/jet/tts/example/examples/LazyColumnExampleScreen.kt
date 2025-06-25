@@ -28,10 +28,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.jet.tts.TextTts
+import com.jet.tts.old.TextTts
 import com.jet.tts.example.LocalTtsClient
 import com.jet.tts.example.R
+import com.jet.tts.rememberTtsState
 
-private const val content = "TODO"
 
 /**
  * @author Miroslav Hýbler <br>
@@ -40,6 +41,16 @@ private const val content = "TODO"
 @Composable
 fun LazyColumnExampleScreen() {
     val ttsClient = LocalTtsClient.current
+
+    val ttsState = rememberTtsState(
+        client = ttsClient,
+        utterances = listOf(
+            "LazyColumnExampleScreen_title" to article.title,
+            "LazyColumnExampleScreen_desc" to article.description,
+            "LazyColumnExampleScreen_content" to article.content,
+            "LazyColumnExampleScreen_content2" to article.content2,
+        )
+    )
 
     val lazyListState = rememberLazyListState()
     Scaffold(

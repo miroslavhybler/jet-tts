@@ -1,5 +1,6 @@
-package com.jet.tts
+package com.jet.tts.old
 
+import android.util.Log
 import androidx.annotation.Keep
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -42,8 +43,8 @@ import com.jet.tts.TtsClient.HighlightMode
 
 
 /**
- * Basic implementation of [Text] with text highlight feature. Plain [Utterance.content] is styled
- * by [highlightText].
+ * Basic implementation of [Text] with text highlight feature. Plain [com.jet.tts.Utterance.content] is styled
+ * by [com.jet.tts.highlightText].
  *
  * ## Features
  *
@@ -56,19 +57,19 @@ import com.jet.tts.TtsClient.HighlightMode
  * ### Autoscroll Feature (api >= 26)
  * By providing a [androidx.compose.foundation.ScrollState], [TextTts] can use it to autoscroll to
  * currently spoken line. Solution for [androidx.compose.foundation.lazy.LazyColumn] is not avaliable now.
- * Use [rememberTtsClient] to get an instance of [com.jet.tts.TtsClient].
+ * Use [com.jet.tts.rememberTtsClient] to get an instance of [com.jet.tts.TtsClient].
  *
  * ## Navigation Feature
  * It is possible to "navigate" in utterance when `ttsClient.isSpeaking == true`, by clicking into
  * [TextTts] client will navigate speech by clicked word.
  *
- * @param text Text to be displayed and highlighted by [TtsClient.highlightMode]. Must be same
- * text as passed in [TtsClient.speak] with the [utteranceId].
+ * @param text Text to be displayed and highlighted by [com.jet.tts.TtsClient.highlightMode]. Must be same
+ * text as passed in [com.jet.tts.TtsClient.speak] with the [utteranceId].
  * @param utteranceId Unique identifier of the utterance. When text displayed is not for the current
  * utterance, text will not be highlighted. **Make sure [utteranceId] matched with one passed in
- * [TtsClient.speak].
- * @param ttsClient [TtsClient] instance used for [android.speech.tts.TextToSpeech] feature.
- * @param highlightStyle [TextStyle] used for highlighting text by [TtsClient.highlightMode].
+ * [com.jet.tts.TtsClient.speak].
+ * @param ttsClient [com.jet.tts.TtsClient] instance used for [android.speech.tts.TextToSpeech] feature.
+ * @param highlightStyle [TextStyle] used for highlighting text by [com.jet.tts.TtsClient.highlightMode].
  * @param scrollState When the text is longer than the screen, you can provide [ScrollState] to
  * enable scroll feature (requires api >= 26), [TextTts] will apply slow scroll animation to keep
  * highlighted text visible as it goes down through the [text].
@@ -84,7 +85,7 @@ fun TextTts(
     modifier: Modifier = Modifier,
     text: String,
     utteranceId: String,
-    ttsClient: TtsClient,
+    ttsClient: com.jet.tts.TtsClient,
     scrollState: ScrollState? = null,
     color: Color = Color.Unspecified,
     fontSize: TextUnit = TextUnit.Unspecified,
@@ -137,9 +138,9 @@ fun TextTts(
 
 
     /**
-     * Tries to scroll to the line of text that is currently spoken by [TtsClient] when conditions are met:
+     * Tries to scroll to the line of text that is currently spoken by [com.jet.tts.TtsClient] when conditions are met:
      * * Current [range]'s utteranceId matches [utteranceId]
-     * * [TtsClient.isSpeaking] is true.
+     * * [com.jet.tts.TtsClient.isSpeaking] is true.
      * * [scrollState] is not null
      * * New scroll value is greater than the current scroll value
      * @since 1.0.0
@@ -250,8 +251,8 @@ fun TextTts(
 
 
 /**
- * Basic implementation of [Text] with text highlight feature. Plain [Utterance.content] is styled
- * by [highlightText].
+ * Basic implementation of [Text] with text highlight feature. Plain [com.jet.tts.Utterance.content] is styled
+ * by [com.jet.tts.highlightText].
  *
  * ## Features
  *
@@ -264,19 +265,19 @@ fun TextTts(
  * ### Autoscroll Feature (api >= 26)
  * By providing a [androidx.compose.foundation.ScrollState], [TextTts] can use it to autoscroll to
  * currently spoken line. Solution for [androidx.compose.foundation.lazy.LazyColumn] is not avaliable now.
- * Use [rememberTtsClient] to get an instance of [com.jet.tts.TtsClient].
+ * Use [com.jet.tts.rememberTtsClient] to get an instance of [com.jet.tts.TtsClient].
  *
  * ## Navigation Feature
  * It is possible to "navigate" in utterance when `ttsClient.isSpeaking == true`, by clicking into
  * [TextTts] client will navigate speech by clicked word.
  *
- * @param text Text to be displayed and highlighted by [TtsClient.highlightMode]. Must be same
- * text as passed in [TtsClient.speak] with the [utteranceId].
+ * @param text Text to be displayed and highlighted by [com.jet.tts.TtsClient.highlightMode]. Must be same
+ * text as passed in [com.jet.tts.TtsClient.speak] with the [utteranceId].
  * @param utteranceId Unique identifier of the utterance. When text displayed is not for the current
  * utterance, text will not be highlighted. **Make sure [utteranceId] matched with one passed in
- * [TtsClient.speak].
- * @param ttsClient [TtsClient] instance used for [android.speech.tts.TextToSpeech] feature.
- * @param highlightStyle [TextStyle] used for highlighting text by [TtsClient.highlightMode].
+ * [com.jet.tts.TtsClient.speak].
+ * @param ttsClient [com.jet.tts.TtsClient] instance used for [android.speech.tts.TextToSpeech] feature.
+ * @param highlightStyle [TextStyle] used for highlighting text by [com.jet.tts.TtsClient.highlightMode].
  * @param scrollState When the text is longer than the screen, you can provide [ScrollState] to
  * enable scroll feature (requires api >= 26), [TextTts] will apply slow scroll animation to keep
  * highlighted text visible as it goes down through the [text].
@@ -292,7 +293,7 @@ fun TextTts(
     modifier: Modifier = Modifier,
     text: AnnotatedString,
     utteranceId: String,
-    ttsClient: TtsClient,
+    ttsClient: com.jet.tts.TtsClient,
     scrollState: ScrollState? = null,
     color: Color = Color.Unspecified,
     fontSize: TextUnit = TextUnit.Unspecified,
@@ -344,9 +345,9 @@ fun TextTts(
 
 
     /**
-     * Tries to scroll to the line of text that is currently spoken by [TtsClient] when conditions are met:
+     * Tries to scroll to the line of text that is currently spoken by [com.jet.tts.TtsClient] when conditions are met:
      * * Current [range]'s utteranceId matches [utteranceId]
-     * * [TtsClient.isSpeaking] is true.
+     * * [com.jet.tts.TtsClient.isSpeaking] is true.
      * * [scrollState] is not null
      * * New scroll value is greater than the current scroll value
      * @since 1.0.0
@@ -457,7 +458,7 @@ fun TextTts(
 
 
 /**
- * @param text Text to be annotated by [TtsClient.highlightMode].
+ * @param text Text to be annotated by [com.jet.tts.TtsClient.highlightMode].
  * @param range Range of the text to be highlighted.
  * @param normalStyle Style of the text that is not highlighted.
  * @param highlightStyle Style of the text that is highlighted.
@@ -468,7 +469,7 @@ fun TextTts(
  */
 private fun highlightText(
     text: String,
-    range: UtteranceProgress,
+    range: com.jet.tts.UtteranceProgress,
     normalStyle: TextStyle,
     highlightStyle: TextStyle,
     utteranceId: String,
@@ -477,7 +478,7 @@ private fun highlightText(
 ): AnnotatedString {
     val normalSpanStyle = normalStyle.toSpanStyle()
 
-    if (range == IntRange.EMPTY) {
+    if (range.range == IntRange.EMPTY) {
         //Range is empty, there is no utterance in progress
         return buildAnnotatedString {
             withStyle(style = normalSpanStyle) {
@@ -538,20 +539,20 @@ private fun highlightText(
 
 
 /**
- * @param text Text to be annotated by [TtsClient.highlightMode] while also keeping original styles
+ * @param text Text to be annotated by [com.jet.tts.TtsClient.highlightMode] while also keeping original styles
  * and annotations.
  * @param range Range of the text to be highlighted.
  * @param normalStyle Style of the text that is not highlighted.
  * @param highlightStyle Style of the text that is highlighted.
  * @param utteranceId Unique identifier of the utterance. When text displayed is not for the current
  * utterance, text will not be highlighted.
- * @param highlightMode [TtsClient.HighlightMode] of the client.
+ * @param highlightMode [com.jet.tts.TtsClient.HighlightMode] of the client.
  * @return Annotated string with highlighted text.
  * @since 1.0.0
  */
 private fun highlightText(
     text: AnnotatedString,
-    range: UtteranceProgress,
+    range: com.jet.tts.UtteranceProgress,
     normalStyle: TextStyle,
     highlightStyle: TextStyle,
     utteranceId: String,
@@ -621,12 +622,12 @@ private fun highlightText(
 
 
 /**
- * [Modifier] for handling navigation in utterance when [TtsClient.isSpeaking] is true.
+ * [Modifier] for handling navigation in utterance when [com.jet.tts.TtsClient.isSpeaking] is true.
  * @since 1.0.0
  */
 private fun Modifier.ttsClickModifierOld(
     textLayout: TextLayoutResult?,
-    ttsClient: TtsClient,
+    ttsClient: com.jet.tts.TtsClient,
     utteranceId: String,
 ): Modifier = this.pointerInput(key1 = Unit) {
     detectTapGestures(

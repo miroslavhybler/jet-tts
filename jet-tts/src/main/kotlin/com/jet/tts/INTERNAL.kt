@@ -28,51 +28,6 @@ import androidx.compose.ui.text.TextLayoutResult
 /////
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/**
- * @author Miroslav Hýbler <br>
- * created on 12.05.2025
- * @since 1.0.0
- */
-@Composable
-internal fun TtsDisposableEffect(
-    scrollableState: ScrollableState?,
-    utteranceId: String,
-    ttsClient: TtsClient,
-) {
-    val range by ttsClient.utteranceRange.collectAsState()
-    var isLazyScroll by remember(key1 = scrollableState) {
-        mutableStateOf(
-            value = scrollableState is LazyListState?
-        )
-    }
-
-    //Used only when scrollableState is LazyListState
-    val isBeingDragged by if (isLazyScroll && scrollableState != null) {
-        (scrollableState as LazyListState).interactionSource.collectIsDraggedAsState()
-    } else {
-        remember { mutableStateOf(value = false) }
-    }
-
-
-    DisposableEffect(key1 = Unit) {
-        onDispose {
-            Log.d("mirek", "onDispose()")
-            if (isLazyScroll) {
-                if (utteranceId == range.utteranceId && !isBeingDragged) {
-                    ttsClient.stopOnDispose()
-                }
-            } else {
-                if (utteranceId == range.utteranceId) {
-                    ttsClient.stopOnDispose()
-                }
-            }
-        }
-    }
-}
-
-
-
-
 
 /**
  * Tries to scroll to the line of text that is currently spoken by [TtsClient] when conditions are met:
