@@ -1,1 +1,2 @@
 -dontwarn java.lang.invoke.StringConcatFactory
+-dontwarn com.jet.tts.TtsStateKt
