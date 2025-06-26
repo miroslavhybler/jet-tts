@@ -2,15 +2,11 @@
 
 package com.jet.tts.example.examples
 
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContent
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -28,7 +24,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.jet.tts.TextTts
-import com.jet.tts.old.TextTts
+import com.jet.tts.TtsLifecycleAwareEffect
 import com.jet.tts.example.LocalTtsClient
 import com.jet.tts.example.R
 import com.jet.tts.rememberTtsState
@@ -43,13 +39,17 @@ fun LazyColumnExampleScreen() {
     val ttsClient = LocalTtsClient.current
 
     val ttsState = rememberTtsState(
-        client = ttsClient,
         utterances = listOf(
             "LazyColumnExampleScreen_title" to article.title,
             "LazyColumnExampleScreen_desc" to article.description,
             "LazyColumnExampleScreen_content" to article.content,
             "LazyColumnExampleScreen_content2" to article.content2,
         )
+    )
+
+    TtsLifecycleAwareEffect(
+        client = ttsClient,
+        state = ttsState,
     )
 
     val lazyListState = rememberLazyListState()

@@ -49,6 +49,64 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.jet.tts.TtsClient.HighlightMode
 
 
+
+
+
+
+@Composable
+@Keep
+fun TextTts(
+    modifier: Modifier = Modifier,
+    utterance: Utterance,
+    ttsClient: TtsClient,
+    scrollableState: ScrollableState? = null,
+    color: Color = Color.Unspecified,
+    fontSize: TextUnit = TextUnit.Unspecified,
+    fontStyle: FontStyle? = null,
+    fontWeight: FontWeight? = null,
+    fontFamily: FontFamily? = null,
+    letterSpacing: TextUnit = TextUnit.Unspecified,
+    textDecoration: TextDecoration? = null,
+    textAlign: TextAlign? = null,
+    lineHeight: TextUnit = TextUnit.Unspecified,
+    overflow: TextOverflow = TextOverflow.Clip,
+    softWrap: Boolean = true,
+    maxLines: Int = Int.MAX_VALUE,
+    minLines: Int = 1,
+    inlineContent: Map<String, InlineTextContent> = mapOf(),
+    onTextLayout: ((TextLayoutResult) -> Unit) = {},
+    style: TextStyle = LocalTextStyle.current,
+    highlightStyle: TextStyle = style.copy(
+        color = MaterialTheme.colorScheme.primary,
+    ),
+) {
+    TextTts(
+        modifier = modifier,
+        text = utterance.content,
+        utteranceId = utterance.utteranceId,
+        ttsClient = ttsClient,
+        scrollableState = scrollableState,
+        color = color,
+        fontSize = fontSize,
+        fontStyle = fontStyle,
+        fontWeight = fontWeight,
+        fontFamily = fontFamily,
+        letterSpacing = letterSpacing,
+        textDecoration = textDecoration,
+        textAlign = textAlign,
+        lineHeight = lineHeight,
+        overflow = overflow,
+        softWrap = softWrap,
+        maxLines = maxLines,
+        minLines = minLines,
+        inlineContent = inlineContent,
+        onTextLayout = onTextLayout,
+        style = style,
+        highlightStyle = highlightStyle,
+    )
+}
+
+
 /**
  * Basic implementation of [Text] with text highlight feature. Plain [Utterance.content] is styled
  * by [highlightText].
@@ -85,7 +143,6 @@ import com.jet.tts.TtsClient.HighlightMode
  * created on 04.02.2025
  * @since 1.0.0
  */
-//TODO overload with utterance?
 @Composable
 @Keep
 fun TextTts(

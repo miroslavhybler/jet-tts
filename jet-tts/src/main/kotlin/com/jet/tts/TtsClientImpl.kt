@@ -190,14 +190,15 @@ internal class TtsClientImpl internal constructor(
 
 
     /**
-     * TODO docs
+     * Current [TtsState] for the client. Use [TtsLifecycleAwareEffect] to call [initWithState] otherwise
+     * [TtsClient] won't speak and crashes will occur.
      */
     private var state: TtsState? = null
 
 
     /**
      * True when [TtsClient] was stopped by [androidx.compose.runtime.DisposableEffect]. When true,
-     * client should avoid property changes so state from [stateHolder] can be saved by [TtsState.Saver].
+     * client should avoid property changes so state from [state] can be saved by [TtsState.Saver].
      * @since 1.0.0
      */
     internal var isInDisposeState: Boolean = false
@@ -291,9 +292,6 @@ internal class TtsClientImpl internal constructor(
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             Log.i("TtsClient", "Highlight feature is not available on Android 7 and lower.")
         }
-
-        //Constructor is called in rememberTtsClient, so we try to restore state if it's available.
-        //   initWithState(stateHolder = stateHolder)
     }
 
 
@@ -508,6 +506,7 @@ internal class TtsClientImpl internal constructor(
     /**
      * Stops currently speaking text in [androidx.compose.runtime.DisposableEffect].
      * This is used instead of [stop] to capture [isSpeaking] state properly.
+     * @since 1.0.0
      */
     internal override fun stopOnDispose(): Unit {
         Log.i("TtsClient", "stopOnDispose()")
@@ -518,7 +517,6 @@ internal class TtsClientImpl internal constructor(
         this.contentMap.clear()
         this.state = null
     }
-
 
 
     /**
@@ -595,12 +593,13 @@ internal class TtsClientImpl internal constructor(
 
 
     /**
-     * Restores state of [TtsClient] from saved [TtsState].
+     * Restores state of [TtsClient] from saved [TtsState] or initializes client with new one.
      * @since 1.0.0
      */
     internal override fun initWithState(stateHolder: TtsState): Unit {
         Log.d("TtsClient", "restoreState: $stateHolder")
         this.state = stateHolder
+        this.isInDisposeState = false
         if (stateHolder.isEmpty) {
             //Nothing to restore
             return

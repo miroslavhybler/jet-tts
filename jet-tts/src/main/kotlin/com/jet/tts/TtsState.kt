@@ -22,8 +22,8 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 
 
 /**
- * Helper class used for saving/restoring state of [TtsClient] when composable is disposed. [com.jet.tts.TtsState]
- * should always stay out of composition scope, that's why all parameters are mutable variables.
+ * Helper class used for saving/restoring state of [TtsClient] when composable is resumed or disposed.
+ * [com.jet.tts.TtsState] should always stay out of composition scope, that's why all parameters are mutable variables.
  * @param utteranceId Unique identifier of the current utterance.
  * @param startIndex Inclusive start index of the first character of the current utterance.
  * @param endIndex Exclusive end index of the last character of the current utterance.
@@ -35,12 +35,45 @@ import androidx.lifecycle.compose.LifecycleEventEffect
  */
 @Keep
 public data class TtsState internal constructor(
-    var utteranceId: String = "",
-    var startIndex: Int = 0,
-    var endIndex: Int = 0,
-    var isSpeaking: Boolean = false,
-    var map: Map<String, Utterance> = emptyMap(),
-) {
+    internal var utteranceId: String = "",
+    internal var startIndex: Int = 0,
+    internal var endIndex: Int = 0,
+    internal var isSpeaking: Boolean = false,
+    internal var map: Map<String, Utterance> = emptyMap(),
+) : Map<String, Utterance> {
+
+
+    /**
+     * Returns the number of key/value pairs in the [map].
+     * @since 1.0.0
+     */
+    override val entries: Set<Map.Entry<String, Utterance>>
+        get() = map.entries
+
+
+    /**
+     * @return A [Set] of the utterance ids contained in [map].
+     * @since 1.0.0
+     */
+    override val keys: Set<String>
+        get() = map.keys
+
+
+    /**
+     * @return A [Collection] of all utterances contained in [map].
+     * @since 1.0.0
+     */
+    override val values: Collection<Utterance>
+        get() = map.values
+
+
+    /**
+     * @return The count of utterances of the [map].
+     * @since 1.0.0
+     */
+    override val size: Int
+        get() = map.size
+
 
     /**
      * Flag indicating if state is empty.
@@ -58,6 +91,39 @@ public data class TtsState internal constructor(
      */
     internal val isNotEmpty: Boolean
         get() = !isEmpty
+
+
+    override fun containsKey(key: String): Boolean {
+        return map.containsKey(key = key)
+    }
+
+
+    /**
+     * @return True if the map is empty (contains no elements), false otherwise.
+     * @since 1.0.0
+     */
+    override fun isEmpty(): Boolean {
+        return map.isEmpty()
+    }
+
+
+    /**
+     * True if [map] contains [value], false otherwise.
+     */
+    override fun containsValue(value: Utterance): Boolean {
+        return map.containsValue(value = value)
+    }
+
+
+    /**
+     * **NOTE:** This method is null safe for better implementation but can throw [NullPointerException].
+     * Make sure to manage utterances properly.
+     * @return The value corresponding to the given [key], or throws [NullPointerException] if there is no such key.
+     */
+    override fun get(key: String): Utterance {
+        return map[key]
+            ?: throw NullPointerException("Utterance with id $key not found!")
+    }
 
 
     /**
@@ -131,26 +197,35 @@ public data class TtsState internal constructor(
 
 
 /**
- * TODO docs
+ * Remembers [TtsState] for [TtsClient] on current composable. Make sure to call [TtsLifecycleAwareEffect]
+ * to initialize [TtsClient] with the state.
+ * @param utterances List of utterances to add to [TtsClient]. Each utterance is a pair of utteranceId
+ * and content to be spoken.
+ * @return [TtsState] for [TtsClient].
+ * @since 1.0.0
  */
+@Keep
 @Composable
 public fun rememberTtsState(
-    client: TtsClient,
     vararg utterances: Pair<String, String>,
 ): TtsState {
     return rememberTtsState(
-        client = client,
         utterances = utterances.toList()
     )
 }
 
 
 /**
- * TODO docs
+ * Remembers [TtsState] for [TtsClient] on current composable. Make sure to call [TtsLifecycleAwareEffect]
+ * to initialize [TtsClient] with the state.
+ * @param utterances List of utterances to add to [TtsClient]. Each utterance is a pair of utteranceId
+ * and content to be spoken.
+ * @return [TtsState] for [TtsClient].
+ * @since 1.0.0
  */
+@Keep
 @Composable
 public fun rememberTtsState(
-    client: TtsClient,
     utterances: List<Pair<String, String>>,
 ): TtsState {
 
@@ -173,16 +248,28 @@ public fun rememberTtsState(
         )
     }
 
+    return state
+}
+
+
+/**
+ * Initialize [TtsClient] with the [state] when composable is resumed and, stops client and saves
+ * the [state] when composable is disposed.
+ * @since 1.0.0
+ */
+@Keep
+@Composable
+fun TtsLifecycleAwareEffect(
+    client: TtsClient,
+    state: TtsState,
+) {
     LifecycleEventEffect(event = Lifecycle.Event.ON_RESUME) {
         client.initWithState(stateHolder = state)
     }
-
 
     DisposableEffect(key1 = Unit) {
         onDispose {
             client.stopOnDispose()
         }
     }
-
-    return state
 }

@@ -1,6 +1,5 @@
 package com.jet.tts.example.examples
 
-import android.speech.tts.TextToSpeech
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,10 +16,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.jet.tts.old.TextTts
 import com.jet.tts.TtsClient
+import com.jet.tts.TtsLifecycleAwareEffect
 import com.jet.tts.example.LocalTtsClient
 import com.jet.tts.example.R
-import com.jet.tts.rememberTtsClient
-import java.util.Locale
+import com.jet.tts.rememberTtsState
 
 private const val content: String =
     "Jet Tts is a simple library providing basic ui for Text to Speech service with " +
@@ -40,9 +39,23 @@ private const val content3: String = "TtsClient is also saving and restoring sta
 fun MultipleTextsExampleScreen() {
     val ttsClient = LocalTtsClient.current
 
+    val ttsState = rememberTtsState(
+        utterances = listOf(
+            "MultipleTextsExampleScreen_1" to content,
+            "MultipleTextsExampleScreen_2" to content2,
+            "MultipleTextsExampleScreen_3" to content3,
+        )
+    )
+
+    TtsLifecycleAwareEffect(
+        client = ttsClient,
+        state = ttsState,
+    )
+
     LaunchedEffect(key1 = Unit) {
         ttsClient.highlightMode = TtsClient.HighlightMode.SPOKEN_WORD
     }
+
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),

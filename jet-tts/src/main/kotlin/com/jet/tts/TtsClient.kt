@@ -39,7 +39,6 @@ import java.util.Locale
  * created on 13.03.2025
  * @see TtsClientImpl
  */
-//TODO continue TtsState.kt impl and check functionality (scroll &lazy)
 @Keep
 public abstract class TtsClient internal constructor() {
 
@@ -213,7 +212,7 @@ public abstract class TtsClient internal constructor() {
 
 
     /**
-     * TODO docs
+     * Restores state of [TtsClient] from saved [TtsState] or initializes client with new one.
      * @since 1.0.0
      */
     internal abstract fun initWithState(stateHolder: TtsState): Unit

@@ -21,8 +21,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.jet.tts.TextTts
-import com.jet.tts.old.TextTts
 import com.jet.tts.TtsClient
+import com.jet.tts.TtsLifecycleAwareEffect
 import com.jet.tts.example.LocalTtsClient
 import com.jet.tts.example.R
 import com.jet.tts.rememberTtsClient
@@ -55,12 +55,15 @@ fun ScrollExampleScreen(
     val scrollState = rememberScrollState()
 
     val ttsState = rememberTtsState(
-        client = ttsClient,
         utterances = listOf(
             "ScrollExampleScreen_1" to content,
             "ScrollExampleScreen_2" to content2,
             "ScrollExampleScreen_3" to content3,
         )
+    )
+    TtsLifecycleAwareEffect(
+        client = ttsClient,
+        state = ttsState,
     )
 
     LaunchedEffect(key1 = Unit) {

@@ -17,7 +17,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withLink
@@ -26,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.jet.tts.old.TextTts
 import com.jet.tts.TtsClient
+import com.jet.tts.TtsLifecycleAwareEffect
 import com.jet.tts.example.LocalTtsClient
 import com.jet.tts.example.R
 import com.jet.tts.rememberTtsClient
@@ -74,10 +74,14 @@ fun AnnotatedStringExampleScreen(
 
     //Must use AnnotatedString.toString()
     val ttsState = rememberTtsState(
-        client = ttsClient,
         utterances = listOf(
             "AnnotatedStringExampleScreen_content" to "$content",
         )
+    )
+
+    TtsLifecycleAwareEffect(
+        client = ttsClient,
+        state = ttsState,
     )
 
     LaunchedEffect(key1 = Unit) {

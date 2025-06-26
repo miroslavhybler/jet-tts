@@ -30,10 +30,10 @@ import kotlinx.parcelize.Parcelize
 @Keep
 @Parcelize
 public data class Utterance public constructor(
-    val utteranceId: String,
-    val content: String,
-    val sequence: Int,
-    var currentIndexThreshold: Int = 0,
+    internal val utteranceId: String,
+    internal val content: String,
+    internal val sequence: Int,
+    internal var currentIndexThreshold: Int = 0,
 ) : Parcelable {
 
 }
