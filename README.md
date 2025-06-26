@@ -1,3 +1,8 @@
+
+# Project Title
+
+A brief description of what this project does and who it's for
+
 # Jet Tts
 
 Jet Tts is a lightweight [Text to Speech](https://android-developers.googleblog.com/2009/09/introduction-to-text-to-speech-in.html) implementation with additional features and basic UI in Jetpack Compose.
@@ -98,6 +103,20 @@ const val utteranceId = "greeting"
 //For getting client Instance
 val ttsClient = rememberTtsClient()
 
+
+//Initializes state for composable screen
+val ttsState = rememberTtsState(
+    utterances = listOf(
+        uteranceId to content,
+    )
+)
+
+//Initializes client with the state
+TtsLifecycleAwareEffect(
+        client = ttsClient,
+        state = ttsState,
+)
+
 Column() {
     TextTts(
         text = text,
@@ -107,7 +126,7 @@ Column() {
 
     Button(
         onClick = {
-            ttsClient.speak(text = text,utteranceId = utteranceId)
+            ttsClient.speak(text = text, )
         },
     ) {
         Text(text = "Speak")
@@ -129,6 +148,19 @@ val ttsClient = rememberTtsClient(
     onInitialized = { ttsClient ->
         ttsClient.setLanguage(language = Locale.US) //Setting language by locale (depends if language is supported)
     },
+)
+
+//Initializes state for composable screen
+val ttsState = rememberTtsState(
+    utterances = listOf(
+        uteranceId to content,
+    )
+)
+
+//Initializes client with the state
+TtsLifecycleAwareEffect(
+        client = ttsClient,
+        state = ttsState,
 )
 
 Column() {
