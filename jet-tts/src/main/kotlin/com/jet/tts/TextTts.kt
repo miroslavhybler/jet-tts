@@ -1,3 +1,5 @@
+@file:Keep
+
 package com.jet.tts
 
 import android.util.Log
@@ -51,8 +53,37 @@ import com.jet.tts.TtsClient.HighlightMode
 
 
 
-
-
+/**
+ * Basic implementation of [Text] with text highlight feature. Plain [Utterance.content] is styled
+ * by [highlightText].
+ *
+ * ## Features
+ *
+ * ### Text highlight Feature (api >= 26)
+ *Using `TtsClient.HighlightMode` to set how you want to highlight currently spoken text:
+ * * `SPOKEN_WORD` - `TextTts` will highlight currently spoken sequence (single word in most cases).
+ * * `SPOKEN_RANGE_FROM_BEGINNING` - `TextTts` will highlight range from the beggining to the currently spoken sequence.
+ * See [HighlightMode].
+ *
+ * ### Autoscroll Feature (api >= 26)
+ * By providing a [androidx.compose.foundation.ScrollState], [TextTts] can use it to autoscroll to
+ * currently spoken line. Solution for [androidx.compose.foundation.lazy.LazyColumn] is not avaliable now.
+ * Use [rememberTtsClient] to get an instance of [com.jet.tts.TtsClient].
+ *
+ * ## Navigation Feature
+ * It is possible to "navigate" in utterance when `ttsClient.isSpeaking == true`, by clicking into
+ * [TextTts] client will navigate speech by clicked word.
+ * @param utterance Utterance from [TtsState] to show.
+ * @param ttsClient [TtsClient] instance used for [android.speech.tts.TextToSpeech] feature.
+ * @param highlightStyle [TextStyle] used for highlighting text by [TtsClient.highlightMode].
+ * @param scrollableState When the text is longer than the screen, you can provide [ScrollState] to
+ * enable scroll feature (requires api >= 26), [TextTts] will apply slow scroll animation to keep
+ * highlighted text visible as it goes down through the text.
+ * @see [Text] for other parameters docs.
+ * @author Miroslav Hýbler <br>
+ * created on 04.02.2025
+ * @since 1.0.0
+ */
 @Composable
 @Keep
 fun TextTts(

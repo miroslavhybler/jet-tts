@@ -1,3 +1,4 @@
+@file:Keep
 @file:Suppress(
     "DATA_CLASS_COPY_VISIBILITY_WILL_BE_CHANGED_WARNING",
     "UNCHECKED_CAST",

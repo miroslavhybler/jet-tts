@@ -1,3 +1,5 @@
+@file:Keep
+
 package com.jet.tts
 
 import android.speech.tts.TextToSpeech
