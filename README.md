@@ -1,8 +1,3 @@
-
-# Project Title
-
-A brief description of what this project does and who it's for
-
 # Jet Tts
 
 Jet Tts is a lightweight [Text to Speech](https://android-developers.googleblog.com/2009/09/introduction-to-text-to-speech-in.html) implementation with additional features and basic UI in Jetpack Compose.
