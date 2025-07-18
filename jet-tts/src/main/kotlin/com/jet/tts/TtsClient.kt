@@ -187,6 +187,22 @@ public abstract class TtsClient internal constructor() {
 
 
     /**
+     * Flushes previous queue (if there was) and creates new one. Calls a [speak] with [TextToSpeech.QUEUE_FLUSH].
+     * @param utterance - Utterance to be spoken, hodling [Utterance.content] and [Utterance.utteranceId].
+     * @param params Parameters for the request. Can be null. See [TextToSpeech.speak] for more
+     * details.
+     * @param startIndex Index of the first character of the current utterance.
+     * @since 1.0.0
+     */
+    public abstract fun flushAndSpeak(
+        utterance: Utterance,
+        params: Bundle? = null,
+        startIndex: Int = 0,
+    ): Unit
+
+
+
+    /**
      * Adds utterance to the queue, calls a [speak] with [TextToSpeech.QUEUE_ADD].
      * @param text Text to be spoken.
      * @param utteranceId Unique identifier of the utterance. This is required since without [utteranceId],
@@ -202,6 +218,23 @@ public abstract class TtsClient internal constructor() {
         params: Bundle? = null,
         startIndex: Int = 0,
     ): Unit
+
+
+
+    /**
+     * Adds utterance to the queue, calls a [speak] with [TextToSpeech.QUEUE_ADD].
+     * @param utterance - Utterance to be spoken, hodling [Utterance.content] and [Utterance.utteranceId].
+     * @param params Parameters for the request. Can be null. See [TextToSpeech.speak] for more
+     * details.
+     * @param startIndex Index of the first character of the current utterance.
+     * @since 1.0.0
+     */
+    public abstract fun add(
+        utterance: Utterance,
+        params: Bundle? = null,
+        startIndex: Int = 0,
+    ): Unit
+
 
 
     /**

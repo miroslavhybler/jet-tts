@@ -179,22 +179,10 @@ fun ArticleExampleScreen(
                     if (ttsClient.isSpeaking) {
                         ttsClient.stop()
                     } else {
-                        ttsClient.flushAndSpeak(
-                            text = article.title,
-                            utteranceId = "ArticleExampleScreen_title",
-                        )
-                        ttsClient.add(
-                            text = article.description,
-                            utteranceId = "ArticleExampleScreen_desc"
-                        )
-                        ttsClient.add(
-                            text = article.content,
-                            utteranceId = "ArticleExampleScreen_content"
-                        )
-                        ttsClient.add(
-                            text = article.content2,
-                            utteranceId = "ArticleExampleScreen_content2"
-                        )
+                        ttsClient.flushAndSpeak(utterance = ttsState["ArticleExampleScreen_title"])
+                        ttsClient.add(utterance = ttsState["ArticleExampleScreen_desc"])
+                        ttsClient.add(utterance = ttsState["ArticleExampleScreen_content"])
+                        ttsClient.add(utterance = ttsState["ArticleExampleScreen_content2"])
                     }
                 },
             ) {

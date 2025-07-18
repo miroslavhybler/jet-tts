@@ -43,9 +43,27 @@ public class TtsClientPreview internal constructor() : TtsClient() {
     }
 
 
+    override fun add(
+        utterance: Utterance,
+        params: Bundle?,
+        startIndex: Int,
+    ) {
+        notImplementedMessage(name = "add")
+    }
+
+
     override fun flushAndSpeak(
         text: String,
         utteranceId: String,
+        params: Bundle?,
+        startIndex: Int,
+    ) {
+        notImplementedMessage(name = "flushAndSpeak")
+    }
+
+
+    override fun flushAndSpeak(
+        utterance: Utterance,
         params: Bundle?,
         startIndex: Int,
     ) {

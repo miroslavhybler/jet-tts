@@ -1,21 +1,21 @@
 [versions]
 adaptive = "1.1.0"
-agp = "8.12.0-alpha06"
+agp = "8.12.0-alpha09"
 coil = "2.7.0"
-kotlin = "2.1.21"
+kotlin = "2.2.0"
 coreKtx = "1.16.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 lifecycleRuntimeKtx = "2.9.1"
 activityCompose = "1.10.1"
-composeBom = "2025.06.01"
+composeBom = "2025.07.00"
 appcompat = "1.7.1"
 material = "1.12.0"
-navigationCompose = "2.9.0"
+navigationCompose = "2.9.2"
 jetUtils = "1.1.2"
 jetLint = "1.0.2"
-material3 = "1.4.0-alpha16"
+material3 = "1.4.0-alpha18"
 [libraries]
 
 jet-utils = { module = "com.github.miroslavhybler:jet-utils", version.ref = "jetUtils" }
