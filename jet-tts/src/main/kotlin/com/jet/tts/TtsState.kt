@@ -94,6 +94,10 @@ public data class TtsState internal constructor(
         get() = !isEmpty
 
 
+    /**
+     * @return True if [map] contains [key], false otherwise.
+     * @since 1.0.0
+     */
     override fun containsKey(key: String): Boolean {
         return map.containsKey(key = key)
     }
@@ -110,6 +114,7 @@ public data class TtsState internal constructor(
 
     /**
      * True if [map] contains [value], false otherwise.
+     * @since 1.0.0
      */
     override fun containsValue(value: Utterance): Boolean {
         return map.containsValue(value = value)
@@ -267,6 +272,9 @@ fun TtsLifecycleAwareEffect(
     LifecycleEventEffect(event = Lifecycle.Event.ON_RESUME) {
         client.initWithState(stateHolder = state)
     }
+
+    //TODO allow client.stop() on pause?
+
 
     DisposableEffect(key1 = Unit) {
         onDispose {

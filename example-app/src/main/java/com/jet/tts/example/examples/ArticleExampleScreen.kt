@@ -118,18 +118,16 @@ fun ArticleExampleScreen(
                 verticalArrangement = Arrangement.spacedBy(space = 16.dp)
             ) {
                 TextTts(
-                    text = article.title,
+                    utterance = ttsState["ArticleExampleScreen_title"],
                     ttsClient = ttsClient,
                     scrollableState = scrollState, //ScrollState for autoscroll feature
-                    utteranceId = "ArticleExampleScreen_title",
                     style = MaterialTheme.typography.headlineMedium,
                 )
 
                 TextTts(
-                    text = article.description,
+                    utterance = ttsState["ArticleExampleScreen_desc"],
                     ttsClient = ttsClient,
                     scrollableState = scrollState, //ScrollState for autoscroll feature
-                    utteranceId = "ArticleExampleScreen_desc",
                     style = MaterialTheme.typography.bodyLarge,
                 )
 
@@ -145,10 +143,9 @@ fun ArticleExampleScreen(
 
 
                 TextTts(
-                    text = article.content,
+                    utterance = ttsState["ArticleExampleScreen_content"],
                     ttsClient = ttsClient,
                     scrollableState = scrollState, //ScrollState for autoscroll feature
-                    utteranceId = "ArticleExampleScreen_content",
                     style = MaterialTheme.typography.bodyLarge,
                 )
 
@@ -164,10 +161,9 @@ fun ArticleExampleScreen(
                 )
 
                 TextTts(
-                    text = article.content2,
+                    utterance = ttsState["ArticleExampleScreen_content2"],
                     ttsClient = ttsClient,
                     scrollableState = scrollState, //ScrollState for autoscroll feature
-                    utteranceId = "ArticleExampleScreen_content2",
                     style = MaterialTheme.typography.bodyLarge,
                 )
             }
