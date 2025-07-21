@@ -116,6 +116,15 @@ public abstract class TtsClient internal constructor() {
 
 
     /**
+     * Flag indicating if [TtsClient] is initialized and [TextToSpeech] is ready to be used.
+     * action afterwards.
+     * @since 1.0.0
+     */
+    public abstract var isInitialized: Boolean
+        protected set
+
+
+    /**
      * Current highlight mode, see [HighlightMode] for more details.
      * @since 1.0.0
      */

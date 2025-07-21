@@ -15,8 +15,10 @@ import android.os.Bundle
 import androidx.annotation.Keep
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.saveable.SaverScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.core.os.bundleOf
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -24,7 +26,8 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 
 /**
  * Helper class used for saving/restoring state of [TtsClient] when composable is resumed or disposed.
- * [com.jet.tts.TtsState] should always stay out of composition scope, that's why all parameters are mutable variables.
+ * Except for the [map], [com.jet.tts.TtsState] should always stay out of composition scope,
+ * that's why all parameters are mutable variables without [androidx.compose.runtime.mutableStateOf].
  * @param utteranceId Unique identifier of the current utterance.
  * @param startIndex Inclusive start index of the first character of the current utterance.
  * @param endIndex Exclusive end index of the last character of the current utterance.
@@ -40,7 +43,7 @@ public data class TtsState internal constructor(
     internal var startIndex: Int = 0,
     internal var endIndex: Int = 0,
     internal var isSpeaking: Boolean = false,
-    internal var map: Map<String, Utterance> = emptyMap(),
+    internal var map: SnapshotStateMap<String, Utterance> = mutableStateMapOf(),
 ) : Map<String, Utterance> {
 
 
@@ -133,6 +136,22 @@ public data class TtsState internal constructor(
 
 
     /**
+     * Saves [value] under [utteranceId].
+     * @param utteranceId Unique identifier of the utterance.
+     * @param value Text that is gonna be spoken by [android.speech.tts.TextToSpeech].
+     * @since 1.0.0
+     */
+    operator fun set(utteranceId: String, value: String) {
+        this.map[utteranceId] = Utterance(
+            utteranceId = utteranceId,
+            content = value,
+            sequence = this.map.size,
+            currentIndexThreshold = 0
+        )
+    }
+
+
+    /**
      * Captures current state of [TtsClient] and saves to be saved later by [Saver]. **[TtsClient]
      * has to call [captureState] in all scenarios when some of the parameters [com.jet.tts.TtsState]
      * has changed.**
@@ -185,15 +204,23 @@ public data class TtsState internal constructor(
                 isSpeaking = value.getBoolean(IS_SPEAKING, false),
                 map = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     val type = HashMap::class.java
-                    (value.getSerializable(
-                        MAP,
-                        type
-                    ) as? HashMap<String, Utterance>) ?: emptyMap()
+                    val savedMap = (value.getSerializable(MAP, type)
+                            as? HashMap<String, Utterance>
+                            )?: emptyMap()
+
+                    val stateMap = SnapshotStateMap<String, Utterance>().also { stateMap ->
+                        stateMap.putAll(from = savedMap)
+                    }
+                    stateMap
                 } else {
                     @Suppress("DEPRECATION")
-                    (value.getSerializable(
-                        MAP,
-                    ) as? HashMap<String, Utterance>) ?: emptyMap()
+                    val savedMap = (value.getSerializable(MAP) as? HashMap<String, Utterance>)
+                        ?:emptyMap()
+
+                    val stateMap = SnapshotStateMap<String, Utterance>().also { stateMap ->
+                        stateMap.putAll(from = savedMap)
+                    }
+                    stateMap
                 },
             )
             return holder
@@ -236,22 +263,27 @@ public fun rememberTtsState(
 ): TtsState {
 
     val state = rememberSaveable(saver = TtsState.Saver) {
-        TtsState(
-            map = utterances
-                .mapIndexed(
-                    transform = { index, pair ->
-                        pair.first to Utterance(
-                            utteranceId = pair.first,
-                            content = pair.second,
-                            sequence = index,
-                            currentIndexThreshold = 0,
-                        )
-                    }
-                )
-                .associate { pair ->
-                    pair.first to pair.second
-                },
-        )
+        val utterancesMap = utterances
+            .mapIndexed(
+                transform = { index, pair ->
+                    val utterance = Utterance(
+                        utteranceId = pair.first,
+                        content = pair.second,
+                        sequence = index,
+                        currentIndexThreshold = 0,
+                    )
+                    pair.first to utterance
+                }
+            )
+            .associate { pair ->
+                pair.first to pair.second
+            }
+
+        val stateMap = SnapshotStateMap<String, Utterance>().also { stateMap ->
+            stateMap.putAll(from = utterancesMap)
+        }
+
+        TtsState(map = stateMap)
     }
 
     return state

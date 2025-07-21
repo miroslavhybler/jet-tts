@@ -15,10 +15,12 @@ import java.util.Locale
  * created on 13.03.2025
  * @since 1.0.0
  */
-public class TtsClientPreview internal constructor() : TtsClient() {
+public object TtsClientPreview : TtsClient() {
 
 
     override var isSpeaking: Boolean = false
+
+    override var isInitialized: Boolean = false
 
 
     override var highlightMode: HighlightMode = HighlightMode.SPOKEN_RANGE_FROM_BEGINNING

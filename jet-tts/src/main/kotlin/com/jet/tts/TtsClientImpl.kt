@@ -11,8 +11,10 @@ import android.util.Log
 import androidx.annotation.Keep
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -45,7 +47,6 @@ import java.util.Locale
  *
  * @param context [Context] required for [TextToSpeech] initialization.
  * @param highlightMode Specifies how the text it [com.jet.tts.old.TextTts] will be highlighted, this works only for phones with api >= 26
- * @param stateHolder Helper variable to store state of [TtsClient].
  * @param onInitialized Callback to be called when [TextToSpeech] is initialized.
  * @param coroutineScope [CoroutineScope] used for waiting until TTS engine is initialized.
  * @param isUsingResume True when you want [TtsClient] to support a "resume" function allowing to
@@ -58,7 +59,7 @@ import java.util.Locale
 @Keep
 internal class TtsClientImpl internal constructor(
     context: Context,
-    initialHighlightMode: TtsClient.HighlightMode,
+    initialHighlightMode: HighlightMode,
     private val onInitialized: (TtsClient) -> Unit = {},
     private val coroutineScope: CoroutineScope,
     private val isUsingResume: Boolean,
@@ -82,8 +83,8 @@ internal class TtsClientImpl internal constructor(
             TextToSpeech.SUCCESS -> {
                 Log.i("TtsClient", "onTtsInitialized()")
                 tts.setOnUtteranceProgressListener(utteranceProgressListener)
-                isInitialized = true
                 initDeferred.complete(value = true)
+                isInitialized = true
                 onInitialized(this@TtsClientImpl)
             }
 
@@ -181,15 +182,6 @@ internal class TtsClientImpl internal constructor(
 
 
     /**
-     * Flag indicating if [TtsClient] is initialized. Do not use check directly, use [waitUntilInitialized] which
-     * is using [initDeferred] for waiting until TTS engine is initialized and calling required
-     * action afterwards.
-     * @since 1.0.0
-     */
-    private var isInitialized: Boolean = false
-
-
-    /**
      * Current [TtsState] for the client. Use [TtsLifecycleAwareEffect] to call [initWithState] otherwise
      * [TtsClient] won't speak and crashes will occur.
      */
@@ -208,7 +200,7 @@ internal class TtsClientImpl internal constructor(
      * Map of all [Utterance]s for this client added by [speak], [add] or [flushAndSpeak].
      * @since 1.0.0
      */
-    internal var contentMap: HashMap<String, Utterance> = hashMapOf()
+    internal var contentMap: SnapshotStateMap<String, Utterance> = mutableStateMapOf()
         private set
 
 
@@ -247,6 +239,16 @@ internal class TtsClientImpl internal constructor(
      */
     public var speechRate: Float = 1f
         private set
+
+
+    /**
+     * Flag indicating if [TtsClient] is initialized and [tts] is ready to be used.
+     * For internal work Do not use check directly, use [waitUntilInitialized] which is using
+     * [initDeferred] for waiting until TTS engine is initialized and calling required
+     * action afterwards.
+     * @since 1.0.0
+     */
+    public override var isInitialized: Boolean by mutableStateOf(value = false)
 
 
     /**

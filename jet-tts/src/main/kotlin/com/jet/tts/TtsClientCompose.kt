@@ -34,9 +34,7 @@ fun rememberTtsClient(
     val isInspection = LocalInspectionMode.current
 
     if (isInspection) {
-        return remember {
-            TtsClientPreview()
-        }
+        return remember { TtsClientPreview }
     }
 
     val coroutineScope = rememberCoroutineScope()

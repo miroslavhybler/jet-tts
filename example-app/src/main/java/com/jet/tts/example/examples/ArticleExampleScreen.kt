@@ -1,5 +1,6 @@
 package com.jet.tts.example.examples
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,10 +21,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import coil.compose.AsyncImage
 import com.jet.tts.TextTts
 import com.jet.tts.TtsClient
 import com.jet.tts.TtsLifecycleAwareEffect
+import com.jet.tts.Utterance
 import com.jet.tts.example.JetTtsExampleTheme
 import com.jet.tts.example.LocalTtsClient
 import com.jet.tts.example.R
@@ -88,17 +92,20 @@ fun ArticleExampleScreen(
     val scrollState = rememberScrollState()
 
     val ttsState = rememberTtsState(
-        utterances = listOf(
-            "ArticleExampleScreen_title" to article.title,
-            "ArticleExampleScreen_desc" to article.description,
-            "ArticleExampleScreen_content" to article.content,
-            "ArticleExampleScreen_content2" to article.content2
-        )
+        utterances = listOf()
     )
     TtsLifecycleAwareEffect(
         client = ttsClient,
         state = ttsState,
     )
+
+    LifecycleEventEffect(event = Lifecycle.Event.ON_RESUME) {
+
+        ttsState["ArticleExampleScreen_title"] = article.title
+        ttsState["ArticleExampleScreen_desc"] = article.description
+        ttsState["ArticleExampleScreen_content"] = article.content
+        ttsState["ArticleExampleScreen_content2"] = article.content2
+    }
 
 
     Scaffold(
@@ -117,19 +124,34 @@ fun ArticleExampleScreen(
                     ),
                 verticalArrangement = Arrangement.spacedBy(space = 16.dp)
             ) {
-                TextTts(
-                    utterance = ttsState["ArticleExampleScreen_title"],
-                    ttsClient = ttsClient,
-                    scrollableState = scrollState, //ScrollState for autoscroll feature
-                    style = MaterialTheme.typography.headlineMedium,
-                )
+                val hasTitle = ttsState.containsKey("ArticleExampleScreen_title")
 
-                TextTts(
-                    utterance = ttsState["ArticleExampleScreen_desc"],
-                    ttsClient = ttsClient,
-                    scrollableState = scrollState, //ScrollState for autoscroll feature
-                    style = MaterialTheme.typography.bodyLarge,
-                )
+                AnimatedVisibility(
+                    visible = hasTitle,
+                ) {
+                    if (hasTitle) {
+                        TextTts(
+                            utterance = ttsState["ArticleExampleScreen_title"],
+                            ttsClient = ttsClient,
+                            scrollableState = scrollState, //ScrollState for autoscroll feature
+                            style = MaterialTheme.typography.headlineMedium,
+                        )
+                    }
+                }
+
+                val hasDescription = ttsState.containsKey("ArticleExampleScreen_desc")
+                AnimatedVisibility(
+                    visible = hasDescription,
+                ) {
+                    if (hasDescription) {
+                        TextTts(
+                            utterance = ttsState["ArticleExampleScreen_desc"],
+                            ttsClient = ttsClient,
+                            scrollableState = scrollState, //ScrollState for autoscroll feature
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                    }
+                }
 
                 AsyncImage(
                     modifier = Modifier
@@ -141,14 +163,19 @@ fun ArticleExampleScreen(
                     contentScale = ContentScale.Crop,
                 )
 
-
-                TextTts(
-                    utterance = ttsState["ArticleExampleScreen_content"],
-                    ttsClient = ttsClient,
-                    scrollableState = scrollState, //ScrollState for autoscroll feature
-                    style = MaterialTheme.typography.bodyLarge,
-                )
-
+                val hasContent = ttsState.containsKey("ArticleExampleScreen_content")
+                AnimatedVisibility(
+                    visible = hasContent,
+                ) {
+                    if (hasContent) {
+                        TextTts(
+                            utterance = ttsState["ArticleExampleScreen_content"],
+                            ttsClient = ttsClient,
+                            scrollableState = scrollState, //ScrollState for autoscroll feature
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                    }
+                }
 
                 AsyncImage(
                     modifier = Modifier
@@ -160,12 +187,19 @@ fun ArticleExampleScreen(
                     contentScale = ContentScale.Crop,
                 )
 
-                TextTts(
-                    utterance = ttsState["ArticleExampleScreen_content2"],
-                    ttsClient = ttsClient,
-                    scrollableState = scrollState, //ScrollState for autoscroll feature
-                    style = MaterialTheme.typography.bodyLarge,
-                )
+                val hasContent2 = ttsState.containsKey("ArticleExampleScreen_content2")
+                AnimatedVisibility(
+                    visible = hasContent2,
+                ) {
+                    if (hasContent2) {
+                        TextTts(
+                            utterance = ttsState["ArticleExampleScreen_content2"],
+                            ttsClient = ttsClient,
+                            scrollableState = scrollState, //ScrollState for autoscroll feature
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                    }
+                }
             }
         },
         floatingActionButton = {
