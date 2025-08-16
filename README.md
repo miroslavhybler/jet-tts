@@ -18,7 +18,7 @@ dependencyResolutionManagement {
 Add library dependency to your app's `build.gradle.kts`:
 ```
 dependencies {
-    implementation("com.github.miroslavhybler:jet-tts:1.0.0-alpha05")
+    implementation("com.github.miroslavhybler:jet-tts:1.0.0-RC1")
 }
 ```
 
