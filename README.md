@@ -6,7 +6,24 @@ Jet Tts is a lightweight [Text to Speech](https://android-developers.googleblog.
 
 ![Ilustration image](/images/showcase.gif)
 
-### Add queries block to `AndoridManifest.xml`
+### Add library dependency
+Add `jitpack.io` maven to your `settings.gradle.kts`:
+```kotlin
+dependencyResolutionManagement {
+    repositories {
+        maven(url = "https://jitpack.io")
+    }
+}
+```
+Add library dependency to your app's `build.gradle.kts`:
+```
+dependencies {
+    implementation("com.github.miroslavhybler:jet-tts:1.0.0-alpha05")
+}
+```
+
+
+### Add queries block to `AndoridManifest.xml` (When Targeting Android 11)
 
 > Apps targeting Android 11 that use text-to-speech should declare
 `TextToSpeech.Engine.INTENT_ACTION_TTS_SERVICE` in the queries elements of their manifest:
@@ -63,7 +80,7 @@ val ttsClient.highlightMode = TtsClient.HighlightMode.SPOKEN_RANGE_FROM_BEGINNIN
 
 
 ### Autoscroll Feature (api >= 26)
-By providing a `ScrollState`, `TextTts` can use it to autoscroll to currently spoken line. Solution for `LazyColumn` is not avaliable now.
+By providing a `ScrollState`, `TextTts` can use it to autoscroll to currently spoken line. Solution works for both `LazyColumn` and `Column` with vertical scroll since 1.0.0-alpha03.
 
 ```kotlin
 val scrollState = rememberScrollState()
@@ -75,12 +92,12 @@ Column(
         text = "",
         ttsClient = ttsClient,
         utteranceId = "content",
-        scrollState = scrollState,
+        scrollableState = scrollState,
     )
 }
 ```
 
-### Navigation Feature
+### Navigation in Utterance Feature
 It is possible to "navigate" in utterance when `ttsClient.isSpeaking == true`, by clicking into `TextTts` client will navigate speech by clicked word.
 
 
