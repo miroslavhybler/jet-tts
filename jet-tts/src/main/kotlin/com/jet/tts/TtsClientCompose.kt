@@ -28,7 +28,7 @@ import androidx.compose.ui.platform.LocalInspectionMode
 fun rememberTtsClient(
     highlightMode: TtsClient.HighlightMode = TtsClient.HighlightMode.SPOKEN_WORD,
     onInitialized: (TtsClient) -> Unit = {},
-    isUsingResume: Boolean = false,
+    isUsingResume: Boolean = true,
 ): TtsClient {
     val context = LocalContext.current
     val isInspection = LocalInspectionMode.current

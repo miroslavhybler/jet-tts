@@ -12,6 +12,7 @@ package com.jet.tts
 
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.annotation.Keep
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -87,6 +88,7 @@ public data class TtsState internal constructor(
         get() = utteranceId == ""
                 && startIndex == 0
                 && endIndex == 0
+                && map.isEmpty()
 
 
     /**
@@ -169,6 +171,8 @@ public data class TtsState internal constructor(
         this.endIndex = client.currentEndIndex
         this.isSpeaking = client.isSpeaking
         this.map = client.contentMap
+
+        Log.i("TtsState", "captureState: $this")
     }
 
 
@@ -206,7 +210,7 @@ public data class TtsState internal constructor(
                     val type = HashMap::class.java
                     val savedMap = (value.getSerializable(MAP, type)
                             as? HashMap<String, Utterance>
-                            )?: emptyMap()
+                            ) ?: emptyMap()
 
                     val stateMap = SnapshotStateMap<String, Utterance>().also { stateMap ->
                         stateMap.putAll(from = savedMap)
@@ -215,7 +219,7 @@ public data class TtsState internal constructor(
                 } else {
                     @Suppress("DEPRECATION")
                     val savedMap = (value.getSerializable(MAP) as? HashMap<String, Utterance>)
-                        ?:emptyMap()
+                        ?: emptyMap()
 
                     val stateMap = SnapshotStateMap<String, Utterance>().also { stateMap ->
                         stateMap.putAll(from = savedMap)

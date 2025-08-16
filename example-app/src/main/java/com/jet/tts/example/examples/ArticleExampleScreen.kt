@@ -100,6 +100,8 @@ fun ArticleExampleScreen(
     )
 
     LifecycleEventEffect(event = Lifecycle.Event.ON_RESUME) {
+        ttsClient.highlightMode =
+            TtsClient.HighlightMode.SPOKEN_RANGE_FROM_BEGINNING_INCLUDING_PREVIOUS_UTTERANCES
 
         ttsState["ArticleExampleScreen_title"] = article.title
         ttsState["ArticleExampleScreen_desc"] = article.description
@@ -209,10 +211,7 @@ fun ArticleExampleScreen(
                     if (ttsClient.isSpeaking) {
                         ttsClient.stop()
                     } else {
-                        ttsClient.flushAndSpeak(utterance = ttsState["ArticleExampleScreen_title"])
-                        ttsClient.add(utterance = ttsState["ArticleExampleScreen_desc"])
-                        ttsClient.add(utterance = ttsState["ArticleExampleScreen_content"])
-                        ttsClient.add(utterance = ttsState["ArticleExampleScreen_content2"])
+                        ttsClient.speak(state = ttsState)
                     }
                 },
             ) {

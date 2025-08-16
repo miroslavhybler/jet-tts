@@ -142,23 +142,7 @@ fun ScrollExampleScreen(
                     if (ttsClient.isSpeaking) {
                         ttsClient.stop()
                     } else {
-                        ttsClient.speak(
-                            text = content,
-                            utteranceId = "ScrollExampleScreen_1",
-                            queueMode = TtsClient.QueueMode.FLUSH,
-                        )
-
-                        ttsClient.speak(
-                            text = content2,
-                            utteranceId = "ScrollExampleScreen_2",
-                            queueMode = TtsClient.QueueMode.ADD,
-                        )
-
-                        ttsClient.speak(
-                            text = content3,
-                            utteranceId = "ScrollExampleScreen_3",
-                            queueMode = TtsClient.QueueMode.ADD,
-                        )
+                        ttsClient.speak(state = ttsState)
                     }
                 },
             ) {

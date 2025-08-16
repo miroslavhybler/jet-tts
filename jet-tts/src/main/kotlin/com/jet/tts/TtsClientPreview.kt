@@ -54,6 +54,10 @@ public object TtsClientPreview : TtsClient() {
     }
 
 
+    override fun speak(state: TtsState) {
+        notImplementedMessage(name = "speak")
+    }
+
     override fun flushAndSpeak(
         text: String,
         utteranceId: String,

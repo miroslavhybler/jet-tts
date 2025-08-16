@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.jet.tts"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 21
@@ -78,7 +78,7 @@ afterEvaluate {
                 from(components.getByName("release"))
                 groupId = "com.jet"
                 artifactId = "tts"
-                version = "1.0.0-alpha05"
+                version = "1.0.0-RC1"
                 pom {
                     description.set("Jitpack.io deploy")
                 }

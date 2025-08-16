@@ -6,14 +6,14 @@ plugins {
 
 android {
     namespace = "com.jet.tts.example"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.jet.tts.example"
         minSdk = 21
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
-        versionName = "1.0.0-alpha01"
+        versionName = "1.0.0-RC1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

@@ -1,4 +1,7 @@
-@file:Suppress("RedundantVisibilityModifier", "RedundantUnitReturnType")
+@file:Suppress(
+    "RedundantVisibilityModifier",
+    "RedundantUnitReturnType",
+)
 
 package com.jet.tts
 
@@ -62,7 +65,7 @@ internal class TtsClientImpl internal constructor(
     initialHighlightMode: HighlightMode,
     private val onInitialized: (TtsClient) -> Unit = {},
     private val coroutineScope: CoroutineScope,
-    private val isUsingResume: Boolean,
+    @Deprecated(message = "Will be true by default") private val isUsingResume: Boolean = true,
 ) : TtsClient() {
 
 
@@ -372,6 +375,72 @@ internal class TtsClientImpl internal constructor(
 
 
     /**
+     * Flushes previous queue (if there was) and creates new one based on [state]. This will call
+     * [flushAndSpeak] with first utterance and adds the others. Utterances are sorted by [Utterance.sequence]
+     * as they are added.
+     * @since 1.0.0
+     */
+    override fun speak(state: TtsState) {
+        if (state.isEmpty) {
+            //Unable to call speak when when state is empty.
+            return
+        }
+
+        val needToFindUtterance = this.currentUtteranceId != ""
+
+        if (needToFindUtterance) {
+            var hasFlushed = false
+            var hasFoundCurrentUtterance = false
+
+            state.values
+                .sortedBy(selector = Utterance::sequence)
+                .forEachIndexed { index, utterance ->
+                    if (!hasFoundCurrentUtterance) {
+                        if (utterance.utteranceId == currentUtteranceId) {
+                            hasFoundCurrentUtterance = true
+                        } else {
+                            return@forEachIndexed
+                        }
+                    }
+
+                    if (!hasFlushed) {
+                        hasFlushed = true
+                        this.flushAndSpeak(
+                            utterance = utterance,
+                            params = null,
+                            startIndex = utterance.currentIndexThreshold,
+                        )
+                    } else {
+                        this.add(
+                            utterance = utterance,
+                            params = null,
+                            startIndex = utterance.currentIndexThreshold,
+                        )
+                    }
+                }
+        } else {
+            state.values
+                .sortedBy(selector = Utterance::sequence)
+                .forEachIndexed { index, utterance ->
+                    if (index == 0) {
+                        this.flushAndSpeak(
+                            utterance = utterance,
+                            params = null,
+                            startIndex = utterance.currentIndexThreshold,
+                        )
+                    } else {
+                        this.add(
+                            utterance = utterance,
+                            params = null,
+                            startIndex = utterance.currentIndexThreshold,
+                        )
+                    }
+                }
+        }
+    }
+
+
+    /**
      * Flushes previous queue (if there was) and creates new one. Calls a [speak] with [QueueMode].
      * @param text Text to be spoken.
      * @param utteranceId Unique identifier of the utterance. This is required since without [utteranceId],
@@ -510,14 +579,7 @@ internal class TtsClientImpl internal constructor(
             tts.stop()
             isSpeaking = false
             val mState = state
-
-            if (mState != null) {
-                mState.captureState(client = this@TtsClientImpl)
-                if (mState.isNotEmpty && isUsingResume) {
-                    //Saving index threshold to resume playing from the same position where it ended
-                    contentMap[mState.utteranceId]?.currentIndexThreshold = mState.startIndex
-                }
-            }
+            mState?.captureState(client = this@TtsClientImpl)
         }
     }
 
@@ -556,7 +618,15 @@ internal class TtsClientImpl internal constructor(
      */
     internal override fun stopOnDispose(): Unit {
         Log.i("TtsClient", "stopOnDispose()")
-        this.state?.captureState(client = this)
+        this.state?.let { mState ->
+
+            contentMap[mState.utteranceId]?.let { currentUtterance ->
+                currentUtterance.currentIndexThreshold += mState.startIndex
+                Log.d("mirek", "new threshold: ${currentUtterance.currentIndexThreshold}")
+            }
+
+            mState.captureState(client = this)
+        }
         this.isInDisposeState = true
         this.tts.stop()
         this.isSpeaking = false
@@ -613,6 +683,8 @@ internal class TtsClientImpl internal constructor(
                         nextUtterance.utteranceId,
                     )
                 }
+
+            state?.captureState(client = this@TtsClientImpl)
         }
 
     }
@@ -646,19 +718,26 @@ internal class TtsClientImpl internal constructor(
         Log.d("TtsClient", "restoreState: $stateHolder")
         this.state = stateHolder
         this.isInDisposeState = false
+        this.clearStates()
+
         if (stateHolder.isEmpty) {
             //Nothing to restore
             return
         }
 
+        //Restoring saved map
+        stateHolder.map.forEach { (k, v) -> contentMap[k] = v }
+
         //Last active utterance when captureState was called, normally onDispose
         val savedUtteranceId = stateHolder.utteranceId
 
+        //Finding last active utterance by it's id
+        val lastActiveUtterance = contentMap[savedUtteranceId] ?: return
+
+        //TODO use utterance's threshold
+        //TODO but threshold is used inside getRange
         currentStartIndex = stateHolder.startIndex
         currentEndIndex = stateHolder.endIndex
-        stateHolder.map.forEach { (k, v) -> contentMap[k] = v }
-        //Finding last active utterance by it's id
-        val utterance = contentMap[savedUtteranceId] ?: return
 
 
         mUtteranceRange.value = UtteranceProgress(
@@ -666,10 +745,10 @@ internal class TtsClientImpl internal constructor(
                 mode = highlightMode,
                 start = currentStartIndex,
                 end = currentEndIndex,
-                utterance = utterance,
+                utterance = lastActiveUtterance,
             ),
             utteranceId = savedUtteranceId,
-            sequence = utterance.sequence,
+            sequence = lastActiveUtterance.sequence,
         )
 
         if (stateHolder.isSpeaking) {
@@ -677,17 +756,20 @@ internal class TtsClientImpl internal constructor(
             waitUntilInitialized {
                 navigateInUtterance(
                     utteranceId = savedUtteranceId,
-                    startIndex = currentStartIndex,
+                    startIndex = lastActiveUtterance.currentIndexThreshold,
                 )
                 if (contentMap.size > 1) {
-                    contentMap.toList()
-                        .sortedBy { pair -> pair.second.sequence }
-                        .forEachIndexed { index, pair ->
+                    contentMap.values
+                        .sortedBy(selector = Utterance::sequence)
+                        .forEachIndexed { index, utterance ->
                             if (index == 0) {
                                 return@forEachIndexed
                             }
                             //Adding all next utterances after active one to the queue
-                            add(text = pair.second.content, utteranceId = pair.first)
+                            add(
+                                text = utterance.content,
+                                utteranceId = utterance.utteranceId,
+                            )
                         }
                 }
             }
@@ -760,5 +842,17 @@ internal class TtsClientImpl internal constructor(
             this.substring(startIndex = startIndex)
         } else this
         return finalContent
+    }
+
+
+    /**
+     * Clears states of [TtsClient] to prepare it.
+     * @since 1.0.0
+     */
+    private fun clearStates() {
+        this.currentUtteranceId = ""
+        this.currentStartIndex = 0
+        this.currentEndIndex = 0
+        this.contentMap.clear()
     }
 }

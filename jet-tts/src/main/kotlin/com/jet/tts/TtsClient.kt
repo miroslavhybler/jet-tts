@@ -196,6 +196,17 @@ public abstract class TtsClient internal constructor() {
 
 
     /**
+     * Flushes previous queue (if there was) and creates new one based on [state]. This will call
+     * [flushAndSpeak] with first utterance and adds the others. Utterances are sorted by [Utterance.sequence]
+     * as they are added.
+     * @since 1.0.0
+     */
+    public abstract fun speak(
+        state: TtsState,
+    ): Unit
+
+
+    /**
      * Flushes previous queue (if there was) and creates new one. Calls a [speak] with [TextToSpeech.QUEUE_FLUSH].
      * @param utterance - Utterance to be spoken, hodling [Utterance.content] and [Utterance.utteranceId].
      * @param params Parameters for the request. Can be null. See [TextToSpeech.speak] for more
@@ -208,7 +219,6 @@ public abstract class TtsClient internal constructor() {
         params: Bundle? = null,
         startIndex: Int = 0,
     ): Unit
-
 
 
     /**
@@ -229,7 +239,6 @@ public abstract class TtsClient internal constructor() {
     ): Unit
 
 
-
     /**
      * Adds utterance to the queue, calls a [speak] with [TextToSpeech.QUEUE_ADD].
      * @param utterance - Utterance to be spoken, hodling [Utterance.content] and [Utterance.utteranceId].
@@ -243,7 +252,6 @@ public abstract class TtsClient internal constructor() {
         params: Bundle? = null,
         startIndex: Int = 0,
     ): Unit
-
 
 
     /**
