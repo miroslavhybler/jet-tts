@@ -138,7 +138,7 @@ Column() {
 
     Button(
         onClick = {
-            ttsClient.speak(text = text, )
+            ttsClient.speak(text = text, utteranceId = utteranceId)
         },
     ) {
         Text(text = "Speak")
