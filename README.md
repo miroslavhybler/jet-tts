@@ -41,7 +41,7 @@ Since `TtsClient` is using `Context` it's recommended to use single `TtsClient` 
 
 ```kotlin
 //Define CompositionLocalProvider that will provide client
-val LocalTtsClient: ProvidableCompositionLocal<TtsClient> = compositionLocalOf(
+val LocalTtsClient: ProvidableCompositionLocal<TtsClient> = staticCompositionLocalOf(
     defaultFactory = { error("Client not available") }
 )
 
