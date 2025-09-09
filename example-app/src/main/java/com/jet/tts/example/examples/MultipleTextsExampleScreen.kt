@@ -14,7 +14,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.jet.tts.old.TextTts
+import com.jet.tts.TextTts
 import com.jet.tts.TtsClient
 import com.jet.tts.TtsLifecycleAwareEffect
 import com.jet.tts.example.LocalTtsClient

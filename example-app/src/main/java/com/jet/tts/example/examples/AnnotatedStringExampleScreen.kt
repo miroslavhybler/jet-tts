@@ -23,7 +23,7 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.jet.tts.old.TextTts
+import com.jet.tts.TextTts
 import com.jet.tts.TtsClient
 import com.jet.tts.TtsLifecycleAwareEffect
 import com.jet.tts.example.LocalTtsClient
