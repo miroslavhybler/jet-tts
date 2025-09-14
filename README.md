@@ -18,7 +18,12 @@ dependencyResolutionManagement {
 Add library dependency to your app's `build.gradle.kts`:
 ```
 dependencies {
-    implementation("com.github.miroslavhybler:jet-tts:1.0.0-RC2")
+    implementation("com.github.miroslavhybler:jet-tts:1.0.0-RC2") {
+        //In case of compatibility issues about compose or material add this excludes
+        //exclude(group = "androidx.compose.material3")
+        //exclude(group = "androidx.compose")
+        //exclude(group = "androidx.compose.ui")
+    }
 }
 ```
 
