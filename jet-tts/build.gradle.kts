@@ -49,22 +49,9 @@ android {
 
 dependencies {
 
-    implementation(libs.jet.utils)
-    implementation(libs.jet.lint)
-
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
-
-    /** Adaptive UI */
-    implementation(libs.androidx.adaptive)
-    implementation(libs.androidx.adaptive.layout)
-    implementation(libs.androidx.adaptive.navigation)
-
+    compileOnly(platform(libs.androidx.compose.bom))
+    compileOnly(libs.androidx.ui)
+    compileOnly(libs.androidx.material3)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -78,7 +65,7 @@ afterEvaluate {
                 from(components.getByName("release"))
                 groupId = "com.jet"
                 artifactId = "tts"
-                version = "1.0.0-RC2"
+                version = "1.0.0-RC3"
                 pom {
                     description.set("Jitpack.io deploy")
                 }

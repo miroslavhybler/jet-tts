@@ -17,10 +17,10 @@ import androidx.annotation.Keep
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.SaverScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshots.SnapshotStateMap
-import androidx.core.os.bundleOf
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 
@@ -190,15 +190,14 @@ public data class TtsState internal constructor(
         private const val MAP: String = "map"
 
         override fun SaverScope.save(value: TtsState): Bundle {
-            return bundleOf(
-                UTTERANCE_ID to value.utteranceId,
-                START_INDEX to value.startIndex,
-                END_INDEX to value.endIndex,
-                IS_SPEAKING to value.isSpeaking,
-                MAP to HashMap(value.map), //We need to create copy for state saver
-            )
+            return Bundle().apply {
+                putString(UTTERANCE_ID, value.utteranceId)
+                putInt(START_INDEX, value.startIndex)
+                putInt(END_INDEX, value.endIndex)
+                putBoolean(IS_SPEAKING, value.isSpeaking)
+                putSerializable(MAP, HashMap(value.map)) //We need to create copy for state saver
+            }
         }
-
 
         override fun restore(value: Bundle): TtsState {
             val holder = TtsState(
@@ -244,9 +243,11 @@ public data class TtsState internal constructor(
 @Keep
 @Composable
 public fun rememberTtsState(
+    key: Any? = null,
     vararg utterances: Pair<String, String>,
 ): TtsState {
     return rememberTtsState(
+        key = key,
         utterances = utterances.toList()
     )
 }
@@ -263,10 +264,14 @@ public fun rememberTtsState(
 @Keep
 @Composable
 public fun rememberTtsState(
+    key: Any? = null,
     utterances: List<Pair<String, String>>,
 ): TtsState {
 
-    val state = rememberSaveable(saver = TtsState.Saver) {
+    val state = rememberSaveable(
+        key,
+        saver = TtsState.Saver
+    ) {
         val utterancesMap = utterances
             .mapIndexed(
                 transform = { index, pair ->
