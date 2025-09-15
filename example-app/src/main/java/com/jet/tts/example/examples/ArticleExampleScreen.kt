@@ -92,7 +92,8 @@ fun ArticleExampleScreen(
     val scrollState = rememberScrollState()
 
     val ttsState = rememberTtsState(
-        utterances = listOf()
+        key = "article",
+        utterances = listOf(),
     )
     TtsLifecycleAwareEffect(
         client = ttsClient,

@@ -579,6 +579,12 @@ internal class TtsClientImpl internal constructor(
             tts.stop()
             isSpeaking = false
             val mState = state
+
+            contentMap[currentUtteranceId]?.let { currentUtterance ->
+                //Setting up threshold for next start wen client can navigate in utterance
+                currentUtterance.currentIndexThreshold = currentStartIndex
+            }
+
             mState?.captureState(client = this@TtsClientImpl)
         }
     }
@@ -630,7 +636,7 @@ internal class TtsClientImpl internal constructor(
         this.isInDisposeState = true
         this.tts.stop()
         this.isSpeaking = false
-        this.contentMap.clear()
+        this.clearStates()
         this.state = null
     }
 
@@ -695,7 +701,7 @@ internal class TtsClientImpl internal constructor(
      * @param utteranceId Id of utterance to get sequence for.
      * @return Sequence (index) of the utterance with given [utteranceId] or [Int.MAX_VALUE] when
      * utterance is not found in [contentMap]. This is used for [HighlightMode.SPOKEN_RANGE_FROM_BEGINNING_INCLUDING_PREVIOUS_UTTERANCES]
-     * when [com.jet.tts.old.TextTts] has to highlight all "previous" utterances too, so returning [Int.MAX_VALUE] by
+     * when [TextTts] has to highlight all "previous" utterances too, so returning [Int.MAX_VALUE] by
      * default won't cause unwanted highlights.
      * @since 1.0.0
      */
@@ -714,11 +720,14 @@ internal class TtsClientImpl internal constructor(
      * Restores state of [TtsClient] from saved [TtsState] or initializes client with new one.
      * @since 1.0.0
      */
+    //TODO make public or add some other solution how to use client when data are not avalilable immediatelly
+    //TODO e.g. dev blog where data into state are passed after a moment
     internal override fun initWithState(stateHolder: TtsState): Unit {
         Log.d("TtsClient", "restoreState: $stateHolder")
+        this.clearStates()
+
         this.state = stateHolder
         this.isInDisposeState = false
-        this.clearStates()
 
         if (stateHolder.isEmpty) {
             //Nothing to restore
@@ -853,6 +862,7 @@ internal class TtsClientImpl internal constructor(
         this.currentUtteranceId = ""
         this.currentStartIndex = 0
         this.currentEndIndex = 0
+        this.mUtteranceRange.value = UtteranceProgress.EMPTY
         this.contentMap.clear()
     }
 }

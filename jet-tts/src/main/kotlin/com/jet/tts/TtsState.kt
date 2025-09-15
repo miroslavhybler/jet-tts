@@ -16,8 +16,10 @@ import android.util.Log
 import androidx.annotation.Keep
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.SaverScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshots.SnapshotStateMap
@@ -310,10 +312,12 @@ fun TtsLifecycleAwareEffect(
     client: TtsClient,
     state: TtsState,
 ) {
-    LifecycleEventEffect(event = Lifecycle.Event.ON_RESUME) {
-        client.initWithState(stateHolder = state)
-    }
 
+    val currentState by rememberUpdatedState(newValue = state)
+
+    LifecycleEventEffect(event = Lifecycle.Event.ON_RESUME) {
+        client.initWithState(stateHolder = currentState)
+    }
     //TODO allow client.stop() on pause?
 
 

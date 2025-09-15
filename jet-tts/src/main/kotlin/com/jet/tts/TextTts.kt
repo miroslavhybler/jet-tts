@@ -51,8 +51,6 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.jet.tts.TtsClient.HighlightMode
 
 
-
-
 /**
  * Basic implementation of [Text] with text highlight feature. Plain [Utterance.content] is styled
  * by [highlightText].
@@ -214,17 +212,19 @@ fun TextTts(
 
     var layoutCoordinates: LayoutCoordinates? by remember { mutableStateOf(value = null) }
     var textLayout: TextLayoutResult? by remember { mutableStateOf(value = null) }
-    var innerText: AnnotatedString by remember {
-        mutableStateOf(
-            value = highlightText(
-                text = text,
-                range = range,
-                highlightStyle = highlightStyle,
-                normalStyle = style,
-                utteranceId = utteranceId,
-                highlightMode = ttsClient.highlightMode,
-                sequence = sequence,
-            )
+    val innerText: AnnotatedString = remember(
+        key1 = text.hashCode(),
+        key2 = range,
+        key3 = ttsClient.highlightMode,
+    ) {
+        highlightText(
+            text = text,
+            range = range,
+            highlightStyle = highlightStyle,
+            normalStyle = style,
+            utteranceId = utteranceId,
+            highlightMode = ttsClient.highlightMode,
+            sequence = sequence,
         )
     }
 
@@ -248,21 +248,10 @@ fun TextTts(
 
     //Effect to highlight text when range changes and also scroll to currently spoken text
     LaunchedEffect(
-        key1 = text,
+        key1 = text.hashCode(),
         key2 = range,
         key3 = ttsClient.highlightMode,
     ) {
-        val newText = highlightText(
-            text = text,
-            range = range,
-            highlightStyle = highlightStyle,
-            normalStyle = style,
-            utteranceId = utteranceId,
-            highlightMode = ttsClient.highlightMode,
-            sequence = sequence,
-        )
-        innerText = newText
-
         if (range.utteranceId != utteranceId) return@LaunchedEffect
         val textLayoutResult = textLayout ?: return@LaunchedEffect
         currentSpokenLine = textLayoutResult.getLineForOffset(offset = range.last)
@@ -391,9 +380,12 @@ fun TextTts(
 
     var layoutCoordinates: LayoutCoordinates? by remember { mutableStateOf(value = null) }
     var textLayout: TextLayoutResult? by remember { mutableStateOf(value = null) }
-    var innerText: AnnotatedString by remember {
-        mutableStateOf(
-            value = highlightText(
+    val innerText: AnnotatedString = remember(
+        key1 = text.hashCode(),
+        key2 = range,
+        key3 = ttsClient.highlightMode,
+    ) {
+        highlightText(
                 text = text,
                 range = range,
                 highlightStyle = highlightStyle,
@@ -402,7 +394,7 @@ fun TextTts(
                 highlightMode = ttsClient.highlightMode,
                 sequence = sequence,
             )
-        )
+
     }
 
     //Holds index of line that is currently spoken (api >= 26)
@@ -425,21 +417,10 @@ fun TextTts(
 
     //Effect to highlight text when range changes and also scroll to currently spoken text
     LaunchedEffect(
-        key1 = text,
+        key1 = text.hashCode(),
         key2 = range,
         key3 = ttsClient.highlightMode,
     ) {
-        val newText = highlightText(
-            text = text,
-            range = range,
-            highlightStyle = highlightStyle,
-            normalStyle = style,
-            utteranceId = utteranceId,
-            highlightMode = ttsClient.highlightMode,
-            sequence = sequence,
-        )
-        innerText = newText
-
         if (range.utteranceId != utteranceId) return@LaunchedEffect
         val textLayoutResult = textLayout ?: return@LaunchedEffect
         currentSpokenLine = textLayoutResult.getLineForOffset(offset = range.last)
@@ -572,11 +553,16 @@ private fun highlightText(
             }
         }
     } catch (exception: StringIndexOutOfBoundsException) {
-        throw IllegalStateException(
-            "Visible text for utterance $utteranceId doesn't match text passed into ttsClient! " +
-                    "Check if have content and ids mapped correctly.",
-            exception
-        )
+//        throw IllegalStateException(
+//            "Visible text for utterance $utteranceId doesn't match text passed into ttsClient! " +
+//                    "Check if have content and ids mapped correctly.",
+//            exception
+//        )
+        return buildAnnotatedString {
+            withStyle(style = normalSpanStyle) {
+                append(text = text)
+            }
+        }
     }
 }
 

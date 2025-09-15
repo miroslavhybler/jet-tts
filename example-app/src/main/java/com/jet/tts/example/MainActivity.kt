@@ -7,6 +7,13 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -20,6 +27,7 @@ import com.jet.tts.example.examples.SingleTextExampleScreen
 import com.jet.tts.example.examples.ToggleHighlightModeScreen
 import com.jet.tts.rememberTtsClient
 import java.util.Locale
+import kotlin.random.Random
 
 
 /**
@@ -56,7 +64,7 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable(route = "single") {
-                            SingleTextExampleScreen()
+                            SingleTextExampleScreen( )
                         }
                         composable(route = "multiple") {
                             MultipleTextsExampleScreen()
