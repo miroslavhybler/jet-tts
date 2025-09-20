@@ -45,6 +45,7 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
             val ttsClient = rememberTtsClient(
                 highlightMode = TtsClient.HighlightMode.SPOKEN_RANGE_FROM_BEGINNING_INCLUDING_PREVIOUS_UTTERANCES,
+                tapNavigationBehavior = TtsClient.TapNavigationBehavior.ALWAYS,
                 onInitialized = { ttsClient ->
                     ttsClient.setLanguage(language = Locale.US)
                 },
@@ -64,7 +65,7 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable(route = "single") {
-                            SingleTextExampleScreen( )
+                            SingleTextExampleScreen()
                         }
                         composable(route = "multiple") {
                             MultipleTextsExampleScreen()

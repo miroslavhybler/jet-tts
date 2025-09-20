@@ -40,6 +40,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
  * created on 05.02.2025
  * @since 1.0.0
  */
+//TODO add clear function
 @Keep
 public data class TtsState internal constructor(
     internal var utteranceId: String = "",
@@ -174,7 +175,7 @@ public data class TtsState internal constructor(
         this.isSpeaking = client.isSpeaking
         this.map = client.contentMap
 
-        Log.i("TtsState", "captureState: $this")
+        Log.i("TtsState", "captureState()")
     }
 
 
@@ -313,12 +314,10 @@ fun TtsLifecycleAwareEffect(
     state: TtsState,
 ) {
 
-    val currentState by rememberUpdatedState(newValue = state)
-
     LifecycleEventEffect(event = Lifecycle.Event.ON_RESUME) {
-        client.initWithState(stateHolder = currentState)
+        client.initWithState(stateHolder = state)
     }
-    //TODO allow client.stop() on pause?
+    //TODO add option into tts if client should stop on_pause
 
 
     DisposableEffect(key1 = Unit) {

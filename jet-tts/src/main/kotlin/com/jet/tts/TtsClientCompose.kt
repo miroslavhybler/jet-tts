@@ -14,7 +14,7 @@ import androidx.compose.ui.platform.LocalInspectionMode
 
 
 /**
- * @param highlightMode Specifies how the text it [com.jet.tts.old.TextTts] will be highlighted.
+ * @param highlightMode Specifies how the text it [com.jet.tts.TextTts] will be highlighted.
  * @param onInitialized Callback to be called when [TextToSpeech] is initialized for further
  * @param isUsingResume True when you want [TtsClient] to support a "resume" function allowing to
  * resume speech instead of being spoken from beginning.
@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.LocalInspectionMode
 @Keep
 fun rememberTtsClient(
     highlightMode: TtsClient.HighlightMode = TtsClient.HighlightMode.SPOKEN_WORD,
+    tapNavigationBehavior: TtsClient.TapNavigationBehavior = TtsClient.TapNavigationBehavior.DISABLED,
     onInitialized: (TtsClient) -> Unit = {},
     isUsingResume: Boolean = true,
 ): TtsClient {
@@ -39,12 +40,11 @@ fun rememberTtsClient(
 
     val coroutineScope = rememberCoroutineScope()
 
-
-
     val client: TtsClientImpl = remember {
         TtsClientImpl(
             context = context,
             initialHighlightMode = highlightMode,
+            initialTapNavigationBehavior = tapNavigationBehavior,
             onInitialized = onInitialized,
             coroutineScope = coroutineScope,
             isUsingResume=isUsingResume,

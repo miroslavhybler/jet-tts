@@ -40,16 +40,16 @@ import java.util.Locale
  * See [HighlightMode].
  *
  * ### Autoscroll Feature (api >= 26)
- * By providing a [androidx.compose.foundation.ScrollState], [com.jet.tts.old.TextTts] can use it to autoscroll to
+ * By providing a [androidx.compose.foundation.ScrollState], [com.jet.tts.TextTts] can use it to autoscroll to
  * currently spoken line. Solution for [androidx.compose.foundation.lazy.LazyColumn] is not avaliable now.
  * Use [rememberTtsClient] to get an instance of [com.jet.tts.TtsClient].
  *
  * ## Navigation Feature
  * It is possible to "navigate" in utterance when `ttsClient.isSpeaking == true`, by clicking into
- * [com.jet.tts.old.TextTts] client will navigate speech by clicked word.
+ * [com.jet.tts.TextTts] client will navigate speech by clicked word.
  *
  * @param context [Context] required for [TextToSpeech] initialization.
- * @param highlightMode Specifies how the text it [com.jet.tts.old.TextTts] will be highlighted, this works only for phones with api >= 26
+ * @param highlightMode Specifies how the text it [com.jet.tts.TextTts] will be highlighted, this works only for phones with api >= 26
  * @param onInitialized Callback to be called when [TextToSpeech] is initialized.
  * @param coroutineScope [CoroutineScope] used for waiting until TTS engine is initialized.
  * @param isUsingResume True when you want [TtsClient] to support a "resume" function allowing to
@@ -63,6 +63,7 @@ import java.util.Locale
 internal class TtsClientImpl internal constructor(
     context: Context,
     initialHighlightMode: HighlightMode,
+    initialTapNavigationBehavior: TapNavigationBehavior,
     private val onInitialized: (TtsClient) -> Unit = {},
     private val coroutineScope: CoroutineScope,
     @Deprecated(message = "Will be true by default") private val isUsingResume: Boolean = true,
@@ -262,6 +263,13 @@ internal class TtsClientImpl internal constructor(
 
 
     /**
+     * Current tap navigation behavior, see [TapNavigationBehavior] for more details.
+     * @since 1.0.0
+     */
+    public override var tapNavigationBehavior: TapNavigationBehavior by mutableStateOf(value = initialTapNavigationBehavior)
+
+
+    /**
      * Range of text to highlight. Use [utteranceRange] to collect updates.
      * @since 1.0.0
      */
@@ -269,7 +277,7 @@ internal class TtsClientImpl internal constructor(
         MutableStateFlow(value = UtteranceProgress.EMPTY)
 
     /**
-     * Range of text to highlight, collected by [com.jet.tts.old.TextTts]
+     * Range of text to highlight, collected by [com.jet.tts.TextTts]
      * @since 1.0.0
      */
     override val utteranceRange: StateFlow<UtteranceProgress> get() = mUtteranceRange.asStateFlow()
@@ -280,6 +288,7 @@ internal class TtsClientImpl internal constructor(
      * when restoring state.
      * @since 1.0.0
      */
+    //TODO docs as this is offseted by threshold
     internal var currentStartIndex: Int = 0
         private set
 
@@ -386,9 +395,10 @@ internal class TtsClientImpl internal constructor(
             return
         }
 
-        val needToFindUtterance = this.currentUtteranceId != ""
+        //Speak is not from beggining but from last active utterance
+        val needToFindCurrentUtterance = this.currentUtteranceId != ""
 
-        if (needToFindUtterance) {
+        if (needToFindCurrentUtterance) {
             var hasFlushed = false
             var hasFoundCurrentUtterance = false
 
@@ -582,7 +592,7 @@ internal class TtsClientImpl internal constructor(
 
             contentMap[currentUtteranceId]?.let { currentUtterance ->
                 //Setting up threshold for next start wen client can navigate in utterance
-                currentUtterance.currentIndexThreshold = currentStartIndex
+                currentUtterance.currentIndexThreshold = currentStartIndex + currentUtterance.currentIndexThreshold
             }
 
             mState?.captureState(client = this@TtsClientImpl)
@@ -662,6 +672,16 @@ internal class TtsClientImpl internal constructor(
         startIndex: Int,
     ): Unit {
         Log.i("TtsClient", "navigateInUtterance(utteranceId=$utteranceId, startIndex=$startIndex)")
+
+        val mState = this.state
+        if (contentMap.isEmpty() && mState != null && mState.isNotEmpty) {
+            //navigateInUtterance called before first speak or when data was not available at initWithState
+            //just adding utterances, in this case all other state values are default.
+            mState.values.forEach { utterance ->
+                contentMap[utterance.utteranceId] = utterance
+            }
+        }
+
         val utterance = contentMap[utteranceId] ?: return
         val text = utterance.content
         utterance.currentIndexThreshold = startIndex
@@ -722,31 +742,31 @@ internal class TtsClientImpl internal constructor(
      */
     //TODO make public or add some other solution how to use client when data are not avalilable immediatelly
     //TODO e.g. dev blog where data into state are passed after a moment
-    internal override fun initWithState(stateHolder: TtsState): Unit {
-        Log.d("TtsClient", "restoreState: $stateHolder")
+    internal override fun initWithState(newState: TtsState): Unit {
+        Log.d("TtsClient", "initWithState: $newState")
         this.clearStates()
 
-        this.state = stateHolder
+        this.state = newState
         this.isInDisposeState = false
 
-        if (stateHolder.isEmpty) {
+        if (newState.isEmpty) {
             //Nothing to restore
             return
         }
 
         //Restoring saved map
-        stateHolder.map.forEach { (k, v) -> contentMap[k] = v }
+        newState.map.forEach { (k, v) -> contentMap[k] = v }
 
         //Last active utterance when captureState was called, normally onDispose
-        val savedUtteranceId = stateHolder.utteranceId
+        val savedUtteranceId = newState.utteranceId
 
         //Finding last active utterance by it's id
         val lastActiveUtterance = contentMap[savedUtteranceId] ?: return
 
         //TODO use utterance's threshold
         //TODO but threshold is used inside getRange
-        currentStartIndex = stateHolder.startIndex
-        currentEndIndex = stateHolder.endIndex
+        currentStartIndex = newState.startIndex
+        currentEndIndex = newState.endIndex
 
 
         mUtteranceRange.value = UtteranceProgress(
@@ -760,7 +780,7 @@ internal class TtsClientImpl internal constructor(
             sequence = lastActiveUtterance.sequence,
         )
 
-        if (stateHolder.isSpeaking) {
+        if (newState.isSpeaking) {
             //When client was speaking before, we have to navigate it properly to continue where it was
             waitUntilInitialized {
                 navigateInUtterance(

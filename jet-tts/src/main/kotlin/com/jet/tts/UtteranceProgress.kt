@@ -13,7 +13,7 @@ import androidx.compose.runtime.Immutable
  * Holding progress in actual utterance spoken by [TtsClient].
  * @param utteranceId Unique id of the actual utterance.
  * @param sequence Sequence of the actual utterance.
- * @param range Index range of text to highlight in [com.jet.tts.old.TextTts], range is defined by [TtsClient.HighlightMode],
+ * @param range Index range of text to highlight in [com.jet.tts.TextTts], range is defined by [TtsClient.HighlightMode],
  * see [TtsClient.utteranceRange] for more details.
  * @author Miroslav Hýbler <br>
  * created on 05.02.2025

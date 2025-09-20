@@ -386,14 +386,14 @@ fun TextTts(
         key3 = ttsClient.highlightMode,
     ) {
         highlightText(
-                text = text,
-                range = range,
-                highlightStyle = highlightStyle,
-                normalStyle = style,
-                utteranceId = utteranceId,
-                highlightMode = ttsClient.highlightMode,
-                sequence = sequence,
-            )
+            text = text,
+            range = range,
+            highlightStyle = highlightStyle,
+            normalStyle = style,
+            utteranceId = utteranceId,
+            highlightMode = ttsClient.highlightMode,
+            sequence = sequence,
+        )
 
     }
 
@@ -647,11 +647,18 @@ private fun highlightText(
             }
         }
     } catch (exception: StringIndexOutOfBoundsException) {
-        throw IllegalStateException(
-            "Visible text for utterance $utteranceId doesn't match text passed into ttsClient! " +
-                    "Check if have content and ids mapped correctly.",
-            exception
-        )
+        /*
+         throw IllegalStateException(
+             "Visible text for utterance $utteranceId doesn't match text passed into ttsClient! " +
+                     "Check if have content and ids mapped correctly.",
+             exception
+         )
+         */
+        return buildAnnotatedString {
+            withStyle(style = normalSpanStyle) {
+                append(text = text)
+            }
+        }
     }
 }
 
@@ -664,20 +671,54 @@ internal fun Modifier.ttsClickModifier(
     textLayout: TextLayoutResult?,
     ttsClient: TtsClient,
     utteranceId: String,
-): Modifier = this.pointerInput(key1 = Unit) {
-    detectTapGestures(
-        onTap = { tapOffset ->
-            val textLayoutResult = textLayout ?: return@detectTapGestures
-            //Clicked char offset from the start of the text
-            val offset = textLayoutResult.getOffsetForPosition(position = tapOffset)
-            //
-            val word = textLayoutResult.getWordBoundary(offset = offset)
-            if (word.start < 0) return@detectTapGestures
-            //Navigate to clicked word
-            ttsClient.navigateInUtterance(
+): Modifier {
+
+    return when (ttsClient.tapNavigationBehavior) {
+        TtsClient.TapNavigationBehavior.DISABLED -> this
+        TtsClient.TapNavigationBehavior.ONLY_WHEN_CURRENTLY_SPEAKING -> {
+            return if (ttsClient.isSpeaking) {
+                this.ttsClickModifierImpl(
+                    textLayout = textLayout,
+                    ttsClient = ttsClient,
+                    utteranceId = utteranceId,
+                )
+            } else {
+                this
+            }
+        }
+
+        TtsClient.TapNavigationBehavior.ALWAYS -> {
+            return this.ttsClickModifierImpl(
+                textLayout = textLayout,
+                ttsClient = ttsClient,
                 utteranceId = utteranceId,
-                startIndex = word.start,
             )
         }
-    )
+    }
+}
+
+
+
+internal fun Modifier.ttsClickModifierImpl(
+    textLayout: TextLayoutResult?,
+    ttsClient: TtsClient,
+    utteranceId: String,
+): Modifier {
+    return this.pointerInput(key1 = Unit) {
+        detectTapGestures(
+            onTap = { tapOffset ->
+                val textLayoutResult = textLayout ?: return@detectTapGestures
+                //Clicked char offset from the start of the text
+                val offset = textLayoutResult.getOffsetForPosition(position = tapOffset)
+                //
+                val word = textLayoutResult.getWordBoundary(offset = offset)
+                if (word.start < 0) return@detectTapGestures
+                //Navigate to clicked word
+                ttsClient.navigateInUtterance(
+                    utteranceId = utteranceId,
+                    startIndex = word.start,
+                )
+            }
+        )
+    }
 }

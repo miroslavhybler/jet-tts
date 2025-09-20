@@ -26,6 +26,9 @@ public object TtsClientPreview : TtsClient() {
     override var highlightMode: HighlightMode = HighlightMode.SPOKEN_RANGE_FROM_BEGINNING
 
 
+    override var tapNavigationBehavior: TapNavigationBehavior = TapNavigationBehavior.DISABLED
+
+
     override val utteranceRange: StateFlow<UtteranceProgress> =
         MutableStateFlow(value = UtteranceProgress.EMPTY)
 

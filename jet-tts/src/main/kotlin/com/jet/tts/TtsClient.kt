@@ -27,13 +27,13 @@ import java.util.Locale
  * See [HighlightMode].
  *
  * ### Autoscroll Feature (api >= 26)
- * By providing a [androidx.compose.foundation.ScrollState], [com.jet.tts.old.TextTts] can use it to autoscroll to
+ * By providing a [androidx.compose.foundation.ScrollState], [com.jet.tts.TextTts] can use it to autoscroll to
  * currently spoken line. Solution for [androidx.compose.foundation.lazy.LazyColumn] is not available now.
  * Use [rememberTtsClient] to get an instance of [com.jet.tts.TtsClient].
  *
  * ## Navigation Feature
  * It is possible to "navigate" in utterance when `ttsClient.isSpeaking == true`, by clicking into
- * [com.jet.tts.old.TextTts] client will navigate speech by clicked word.
+ * [com.jet.tts.TextTts] client will navigate speech by clicked word.
  * @since 1.0.0
  * @author Miroslav Hýbler <br>
  * created on 13.03.2025
@@ -43,7 +43,7 @@ import java.util.Locale
 public abstract class TtsClient internal constructor() {
 
     /**
-     * Specifies how the text it [com.jet.tts.old.TextTts] will be highlighted.
+     * Specifies how the text it [com.jet.tts.TextTts] will be highlighted.
      * @since 1.0.0
      */
     @Keep
@@ -70,6 +70,33 @@ public abstract class TtsClient internal constructor() {
          * @since 1.0.0
          */
         SPOKEN_RANGE_FROM_BEGINNING_INCLUDING_PREVIOUS_UTTERANCES;
+    }
+
+
+    /**
+     * Specifies how [com.jet.tts.TextTts] should handle tap navigation in actual utterances. See
+     * [ttsClickModifier] for actual implementation.
+     * @since 1.0.0
+     */
+    @Keep
+    public enum class TapNavigationBehavior {
+
+        /**
+         * Default option, the [ttsClickModifier] won't be enabled.
+         */
+        DISABLED,
+
+        /**
+         * Navigation in utterance is enabled only when [com.jet.tts.TtsClient.isSpeaking] which makes
+         * it the best option for most use cases for good user experience.
+         */
+        ONLY_WHEN_CURRENTLY_SPEAKING,
+
+
+        /**
+         * Navi
+         */
+        ALWAYS;
     }
 
 
@@ -132,7 +159,14 @@ public abstract class TtsClient internal constructor() {
 
 
     /**
-     * Range of text to highlight, collected by [com.jet.tts.old.TextTts]
+     * Current tap navigation behavior.
+     * @since 1.0.0
+     */
+    public abstract var tapNavigationBehavior: TapNavigationBehavior
+
+
+    /**
+     * Range of text to highlight, collected by [com.jet.tts.TextTts]
      * @since 1.0.0
      */
     public abstract val utteranceRange: StateFlow<UtteranceProgress>
@@ -293,7 +327,7 @@ public abstract class TtsClient internal constructor() {
      * @param utteranceId Id of utterance to get sequence for.
      * @return Sequence (index) of the utterance with given [utteranceId] or [Int.MAX_VALUE] when
      * utterance is not found. This is used for [HighlightMode.SPOKEN_RANGE_FROM_BEGINNING_INCLUDING_PREVIOUS_UTTERANCES]
-     * when [com.jet.tts.old.TextTts] has to highlight all "previous" utterances too, so returning [Int.MAX_VALUE] by
+     * when [com.jet.tts.TextTts] has to highlight all "previous" utterances too, so returning [Int.MAX_VALUE] by
      * default won't cause unwanted highlights.
      * @since 1.0.0
      */
