@@ -18,7 +18,7 @@ dependencyResolutionManagement {
 Add library dependency to your app's `build.gradle.kts`:
 ```
 dependencies {
-    implementation("com.github.miroslavhybler:jet-tts:1.0.0-RC3")
+    implementation("com.github.miroslavhybler:jet-tts:1.0.0-RC5")
 }
 ```
 
@@ -98,7 +98,7 @@ Column(
 ```
 
 ### Navigation in Utterance Feature
-It is possible to "navigate" in utterance when `ttsClient.isSpeaking == true`, by clicking into `TextTts` client will navigate speech by clicked word.
+It is possible to "navigate" in utterance when `ttsClient.isSpeaking == true`, by clicking into `TextTts` client will navigate speech by clicked word. Set the right `TapNavigationBehavior` for the `TtsClient`
 
 
 ## Examples
