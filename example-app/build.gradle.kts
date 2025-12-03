@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "com.jet.tts.example"
-        minSdk = 21
+        minSdk = 23
         targetSdk = 36
         versionCode = 1
         versionName = "1.0.0-RC1"
