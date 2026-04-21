@@ -93,7 +93,6 @@ fun MultipleTextsExampleScreen() {
                     if (ttsClient.isSpeaking) {
                         ttsClient.stop()
                     } else {
-
                         ttsClient.flushAndSpeak(
                             text = content,
                             utteranceId = "MultipleTextsExampleScreen_1",

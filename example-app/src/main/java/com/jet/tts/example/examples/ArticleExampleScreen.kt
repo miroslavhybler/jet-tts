@@ -27,7 +27,6 @@ import coil.compose.AsyncImage
 import com.jet.tts.TextTts
 import com.jet.tts.TtsClient
 import com.jet.tts.TtsLifecycleAwareEffect
-import com.jet.tts.Utterance
 import com.jet.tts.example.JetTtsExampleTheme
 import com.jet.tts.example.LocalTtsClient
 import com.jet.tts.example.R
@@ -134,7 +133,7 @@ fun ArticleExampleScreen(
                 ) {
                     if (hasTitle) {
                         TextTts(
-                            utterance = ttsState["ArticleExampleScreen_title"],
+                            utterance = ttsState.requireUtterance("ArticleExampleScreen_title"),
                             ttsClient = ttsClient,
                             scrollableState = scrollState, //ScrollState for autoscroll feature
                             style = MaterialTheme.typography.headlineMedium,
@@ -148,7 +147,7 @@ fun ArticleExampleScreen(
                 ) {
                     if (hasDescription) {
                         TextTts(
-                            utterance = ttsState["ArticleExampleScreen_desc"],
+                            utterance = ttsState.requireUtterance("ArticleExampleScreen_desc"),
                             ttsClient = ttsClient,
                             scrollableState = scrollState, //ScrollState for autoscroll feature
                             style = MaterialTheme.typography.bodyLarge,
@@ -172,7 +171,7 @@ fun ArticleExampleScreen(
                 ) {
                     if (hasContent) {
                         TextTts(
-                            utterance = ttsState["ArticleExampleScreen_content"],
+                            utterance = ttsState.requireUtterance("ArticleExampleScreen_content"),
                             ttsClient = ttsClient,
                             scrollableState = scrollState, //ScrollState for autoscroll feature
                             style = MaterialTheme.typography.bodyLarge,
@@ -196,7 +195,7 @@ fun ArticleExampleScreen(
                 ) {
                     if (hasContent2) {
                         TextTts(
-                            utterance = ttsState["ArticleExampleScreen_content2"],
+                            utterance = ttsState.requireUtterance("ArticleExampleScreen_content2"),
                             ttsClient = ttsClient,
                             scrollableState = scrollState, //ScrollState for autoscroll feature
                             style = MaterialTheme.typography.bodyLarge,

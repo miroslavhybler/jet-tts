@@ -67,7 +67,7 @@ fun SingleTextExampleScreen() {
                 Spacer(modifier = Modifier.height(height = 16.dp))
 
                 TextTts(
-                    utterance = ttsState["SingleTextExampleScreen_content"],
+                    utterance = ttsState.requireUtterance("SingleTextExampleScreen_content"),
                     ttsClient = ttsClient,
                     highlightStyle = TextStyle(color = Color.Red)
                 )

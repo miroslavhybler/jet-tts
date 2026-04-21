@@ -84,10 +84,9 @@ fun ToggleHighlightModeScreen() {
                     if (ttsClient.isSpeaking) {
                         ttsClient.stop()
                     } else {
-                        ttsClient.speak(
+                        ttsClient.flushAndSpeak(
                             text = content,
                             utteranceId = "ToggleHighlightModeScreen_content",
-                            queueMode = TtsClient.QueueMode.FLUSH,
                         )
                     }
                 },

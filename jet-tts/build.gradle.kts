@@ -50,6 +50,8 @@ dependencies {
     compileOnly(libs.androidx.ui)
     compileOnly(libs.androidx.material3)
 
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.compose.runtime)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

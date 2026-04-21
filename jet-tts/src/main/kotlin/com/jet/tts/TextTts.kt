@@ -206,9 +206,7 @@ fun TextTts(
     //Extra offset from top of the screen so highlighted text will not be at the top corner of the screen
     val extraOffset = remember { with(receiver = density) { 128.dp.toPx() }.toInt() }
 
-    val sequence = remember(key1 = utteranceId, key2 = range) {
-        ttsClient.getSequenceForUtterance(utteranceId = utteranceId)
-    }
+    val sequence = ttsClient.getSequenceForUtterance(utteranceId = utteranceId)
 
     var layoutCoordinates: LayoutCoordinates? by remember { mutableStateOf(value = null) }
     var textLayout: TextLayoutResult? by remember { mutableStateOf(value = null) }
@@ -374,9 +372,7 @@ fun TextTts(
 
     //Extra offset from top of the screen so highlighted text will not be at the top corner of the screen
     val extraOffset = remember { with(density) { 128.dp.toPx() }.toInt() }
-    val sequence = remember(key1 = utteranceId) {
-        ttsClient.getSequenceForUtterance(utteranceId = utteranceId)
-    }
+    val sequence = ttsClient.getSequenceForUtterance(utteranceId = utteranceId)
 
     var layoutCoordinates: LayoutCoordinates? by remember { mutableStateOf(value = null) }
     var textLayout: TextLayoutResult? by remember { mutableStateOf(value = null) }

@@ -356,6 +356,7 @@ internal class TtsClientImpl internal constructor(
         }
 
         waitUntilInitialized {
+            val existingUtterance = contentMap[utteranceId]
             if (queueMode == QueueMode.FLUSH) {
                 //Queue flush requested, we have to clear all previous utterances.
                 contentMap.clear()
@@ -365,7 +366,7 @@ internal class TtsClientImpl internal constructor(
                 utteranceId = utteranceId,
                 content = text,
                 currentIndexThreshold = startIndex,
-                sequence = contentMap.size,
+                sequence = existingUtterance?.sequence ?: contentMap.size,
             )
             val actualTextToBeSpoken: String = text.toSubstring(startIndex = startIndex)
 
@@ -467,9 +468,14 @@ internal class TtsClientImpl internal constructor(
         startIndex: Int,
     ) {
         val mState = state
-        if (isUsingResume && mState != null && mState.isNotEmpty) {
-            val utterance = contentMap[mState.utteranceId]
-            if (utterance != null) {
+        if (
+            isUsingResume
+            && mState != null
+            && mState.isNotEmpty
+            && mState.utteranceId == utteranceId
+        ) {
+            val utterance = contentMap[utteranceId]
+            if (utterance != null && utterance.content == text) {
                 navigateInUtterance(
                     utteranceId = utterance.utteranceId,
                     startIndex = utterance.currentIndexThreshold,
@@ -526,26 +532,7 @@ internal class TtsClientImpl internal constructor(
         params: Bundle?,
         startIndex: Int,
     ) {
-        val mState = state
-        if (!isSpeaking && isUsingResume && mState != null && mState.isNotEmpty) {
-            val utterance = contentMap[mState.utteranceId]
-            if (utterance != null) {
-                navigateInUtterance(
-                    utteranceId = utterance.utteranceId,
-                    startIndex = utterance.currentIndexThreshold,
-                )
-                return
-            } else {
-                speak(
-                    text = text,
-                    utteranceId = utteranceId,
-                    queueMode = QueueMode.ADD,
-                    params = params,
-                    startIndex = startIndex,
-                )
-            }
-
-        } else if (!contentMap.contains(key = utteranceId)) {
+        if (!isSpeaking || !contentMap.contains(key = utteranceId)) {
             speak(
                 text = text,
                 utteranceId = utteranceId,

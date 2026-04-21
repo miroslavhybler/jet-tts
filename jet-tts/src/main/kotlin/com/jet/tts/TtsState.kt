@@ -130,13 +130,20 @@ public data class TtsState internal constructor(
 
 
     /**
-     * **NOTE:** This method is null safe for better implementation but can throw [NullPointerException].
-     * Make sure to manage utterances properly.
-     * @return The value corresponding to the given [key], or throws [NullPointerException] if there is no such key.
+     * @return The value corresponding to the given [key], or `null` when there is no such key.
      */
-    override fun get(key: String): Utterance {
+    override fun get(key: String): Utterance? {
         return map[key]
-            ?: throw NullPointerException("Utterance with id $key not found!")
+    }
+
+
+    /**
+     * Helper for call sites that expect an utterance to exist.
+     * @throws IllegalStateException when [utteranceId] is not present.
+     */
+    public fun requireUtterance(utteranceId: String): Utterance {
+        return map[utteranceId]
+            ?: throw IllegalStateException("Utterance with id $utteranceId not found!")
     }
 
 
@@ -147,11 +154,12 @@ public data class TtsState internal constructor(
      * @since 1.0.0
      */
     operator fun set(utteranceId: String, value: String) {
+        val existingUtterance = this.map[utteranceId]
         this.map[utteranceId] = Utterance(
             utteranceId = utteranceId,
             content = value,
-            sequence = this.map.size,
-            currentIndexThreshold = 0
+            sequence = existingUtterance?.sequence ?: this.map.size,
+            currentIndexThreshold = existingUtterance?.currentIndexThreshold ?: 0,
         )
     }
 
