@@ -87,9 +87,12 @@ internal class TtsClientImpl internal constructor(
             TextToSpeech.SUCCESS -> {
                 Log.i("TtsClient", "onTtsInitialized()")
                 tts.setOnUtteranceProgressListener(utteranceProgressListener)
-                initDeferred.complete(value = true)
                 isInitialized = true
-                onInitialized(this@TtsClientImpl)
+                try {
+                    onInitialized(this@TtsClientImpl)
+                } finally {
+                    initDeferred.complete(value = true)
+                }
             }
 
             TextToSpeech.ERROR -> {
@@ -284,18 +287,19 @@ internal class TtsClientImpl internal constructor(
 
 
     /**
-     * Holding current start index of the current utterance. Saving it helps with [getRange] call
-     * when restoring state.
+     * Raw start index reported by [TextToSpeech] for the text currently submitted to the engine.
+     * When playback starts from the middle of [Utterance.content], use
+     * [Utterance.currentIndexThreshold] to translate this value to an absolute content index.
      * @since 1.0.0
      */
-    //TODO docs as this is offseted by threshold
     internal var currentStartIndex: Int = 0
         private set
 
 
     /**
-     * Holding current end index of the current utterance. Saving it helps with [getRange] call
-     * when restoring state.
+     * Raw exclusive end index reported by [TextToSpeech] for the text currently submitted to the
+     * engine. When playback starts from the middle of [Utterance.content], use
+     * [Utterance.currentIndexThreshold] to translate this value to an absolute content index.
      * @since 1.0.0
      */
     internal var currentEndIndex: Int = 0
@@ -315,13 +319,13 @@ internal class TtsClientImpl internal constructor(
      * @since 1.0.0
      */
     public override fun setLanguage(language: Locale): Unit {
+        if (isInitialized) {
+            setLanguageInternal(language = language)
+            return
+        }
+
         waitUntilInitialized {
-            val availability = tts.isLanguageAvailable(language)
-            if (availability == TextToSpeech.LANG_NOT_SUPPORTED) {
-                Log.w("TtsClient", "Language not supported: $language")
-                return@waitUntilInitialized
-            }
-            tts.language = language
+            setLanguageInternal(language = language)
         }
     }
 
@@ -573,16 +577,15 @@ internal class TtsClientImpl internal constructor(
     public override fun stop(): Unit {
         Log.i("TtsClient", "stop()")
         waitUntilInitialized {
+            val wasSpeaking = isSpeaking
             tts.stop()
-            isSpeaking = false
-            val mState = state
 
-            contentMap[currentUtteranceId]?.let { currentUtterance ->
-                //Setting up threshold for next start wen client can navigate in utterance
-                currentUtterance.currentIndexThreshold = currentStartIndex + currentUtterance.currentIndexThreshold
+            if (wasSpeaking) {
+                moveCurrentProgressToThreshold()
             }
 
-            mState?.captureState(client = this@TtsClientImpl)
+            isSpeaking = false
+            state?.captureState(client = this@TtsClientImpl)
         }
     }
 
@@ -595,7 +598,7 @@ internal class TtsClientImpl internal constructor(
         Log.i("TtsClient", "release()")
         this.tts.stop()
         this.tts.shutdown()
-        this.contentMap.clear()
+        this.contentMap = mutableStateMapOf()
     }
 
 
@@ -615,17 +618,29 @@ internal class TtsClientImpl internal constructor(
 
 
     /**
+     * Sets [tts] language immediately. Caller must ensure [TextToSpeech] is initialized.
+     */
+    private fun setLanguageInternal(language: Locale) {
+        val availability = tts.isLanguageAvailable(language)
+        if (availability == TextToSpeech.LANG_NOT_SUPPORTED) {
+            Log.w("TtsClient", "Language not supported: $language")
+            return
+        }
+        tts.language = language
+    }
+
+
+    /**
      * Stops currently speaking text in [androidx.compose.runtime.DisposableEffect].
      * This is used instead of [stop] to capture [isSpeaking] state properly.
      * @since 1.0.0
      */
     internal override fun stopOnDispose(): Unit {
         Log.i("TtsClient", "stopOnDispose()")
+        val wasSpeaking = isSpeaking
         this.state?.let { mState ->
-
-            contentMap[mState.utteranceId]?.let { currentUtterance ->
-                currentUtterance.currentIndexThreshold += mState.startIndex
-                Log.d("mirek", "new threshold: ${currentUtterance.currentIndexThreshold}")
+            if (wasSpeaking) {
+                moveCurrentProgressToThreshold()
             }
 
             mState.captureState(client = this)
@@ -672,6 +687,9 @@ internal class TtsClientImpl internal constructor(
         val utterance = contentMap[utteranceId] ?: return
         val text = utterance.content
         utterance.currentIndexThreshold = startIndex
+        currentUtteranceId = utteranceId
+        currentStartIndex = 0
+        currentEndIndex = 0
         val textToBeSpoken = text.toSubstring(startIndex = startIndex)
 
         waitUntilInitialized {
@@ -727,33 +745,30 @@ internal class TtsClientImpl internal constructor(
      * Restores state of [TtsClient] from saved [TtsState] or initializes client with new one.
      * @since 1.0.0
      */
-    //TODO make public or add some other solution how to use client when data are not avalilable immediatelly
-    //TODO e.g. dev blog where data into state are passed after a moment
-    internal override fun initWithState(newState: TtsState): Unit {
-        Log.d("TtsClient", "initWithState: $newState")
+    public override fun initWithState(stateHolder: TtsState): Unit {
+        Log.d("TtsClient", "initWithState: $stateHolder")
         this.clearStates()
 
-        this.state = newState
+        this.state = stateHolder
         this.isInDisposeState = false
 
-        if (newState.isEmpty) {
+        if (stateHolder.isEmpty) {
             //Nothing to restore
             return
         }
 
         //Restoring saved map
-        newState.map.forEach { (k, v) -> contentMap[k] = v }
+        stateHolder.map.forEach { (k, v) -> contentMap[k] = v }
 
         //Last active utterance when captureState was called, normally onDispose
-        val savedUtteranceId = newState.utteranceId
+        val savedUtteranceId = stateHolder.utteranceId
 
-        //Finding last active utterance by it's id
+        //Finding last active utterance by its id
         val lastActiveUtterance = contentMap[savedUtteranceId] ?: return
 
-        //TODO use utterance's threshold
-        //TODO but threshold is used inside getRange
-        currentStartIndex = newState.startIndex
-        currentEndIndex = newState.endIndex
+        currentUtteranceId = savedUtteranceId
+        currentStartIndex = stateHolder.startIndex
+        currentEndIndex = stateHolder.endIndex
 
 
         mUtteranceRange.value = UtteranceProgress(
@@ -767,28 +782,12 @@ internal class TtsClientImpl internal constructor(
             sequence = lastActiveUtterance.sequence,
         )
 
-        if (newState.isSpeaking) {
+        if (stateHolder.isSpeaking) {
             //When client was speaking before, we have to navigate it properly to continue where it was
-            waitUntilInitialized {
-                navigateInUtterance(
-                    utteranceId = savedUtteranceId,
-                    startIndex = lastActiveUtterance.currentIndexThreshold,
-                )
-                if (contentMap.size > 1) {
-                    contentMap.values
-                        .sortedBy(selector = Utterance::sequence)
-                        .forEachIndexed { index, utterance ->
-                            if (index == 0) {
-                                return@forEachIndexed
-                            }
-                            //Adding all next utterances after active one to the queue
-                            add(
-                                text = utterance.content,
-                                utteranceId = utterance.utteranceId,
-                            )
-                        }
-                }
-            }
+            navigateInUtterance(
+                utteranceId = savedUtteranceId,
+                startIndex = lastActiveUtterance.currentIndexThreshold,
+            )
         }
     }
 
@@ -862,6 +861,21 @@ internal class TtsClientImpl internal constructor(
 
 
     /**
+     * Moves raw progress indexes into [Utterance.currentIndexThreshold] so saved state can resume
+     * from the current spoken range without double-counting the offset in [getRange].
+     */
+    private fun moveCurrentProgressToThreshold() {
+        val utterance = contentMap[currentUtteranceId] ?: return
+        val spokenStartIndex = currentStartIndex
+        val spokenEndIndex = currentEndIndex
+
+        utterance.currentIndexThreshold += spokenStartIndex
+        currentStartIndex = 0
+        currentEndIndex = (spokenEndIndex - spokenStartIndex).coerceAtLeast(minimumValue = 0)
+    }
+
+
+    /**
      * Clears states of [TtsClient] to prepare it.
      * @since 1.0.0
      */
@@ -870,6 +884,6 @@ internal class TtsClientImpl internal constructor(
         this.currentStartIndex = 0
         this.currentEndIndex = 0
         this.mUtteranceRange.value = UtteranceProgress.EMPTY
-        this.contentMap.clear()
+        this.contentMap = mutableStateMapOf()
     }
 }

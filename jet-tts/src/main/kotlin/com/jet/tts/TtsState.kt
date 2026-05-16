@@ -40,7 +40,6 @@ import androidx.lifecycle.compose.LifecycleEventEffect
  * created on 05.02.2025
  * @since 1.0.0
  */
-//TODO add clear function
 @Keep
 public data class TtsState internal constructor(
     internal var utteranceId: String = "",
@@ -100,6 +99,19 @@ public data class TtsState internal constructor(
      */
     internal val isNotEmpty: Boolean
         get() = !isEmpty
+
+
+    /**
+     * Clears all saved progress and utterances from this state.
+     * @since 1.0.0
+     */
+    public fun clear(): Unit {
+        utteranceId = ""
+        startIndex = 0
+        endIndex = 0
+        isSpeaking = false
+        map.clear()
+    }
 
 
     /**
@@ -311,8 +323,9 @@ public fun rememberTtsState(
 
 
 /**
- * Initialize [TtsClient] with the [state] when composable is resumed and, stops client and saves
+ * Initialize [TtsClient] with the [state] when composable is resumed and stops client and saves
  * the [state] when composable is disposed.
+ * @param stopOnPause When true, [client] stops and saves current progress on [Lifecycle.Event.ON_PAUSE].
  * @since 1.0.0
  */
 @Keep
@@ -320,12 +333,18 @@ public fun rememberTtsState(
 fun TtsLifecycleAwareEffect(
     client: TtsClient,
     state: TtsState,
+    stopOnPause: Boolean = false,
 ) {
 
     LifecycleEventEffect(event = Lifecycle.Event.ON_RESUME) {
         client.initWithState(stateHolder = state)
     }
-    //TODO add option into tts if client should stop on_pause
+
+    LifecycleEventEffect(event = Lifecycle.Event.ON_PAUSE) {
+        if (stopOnPause) {
+            client.stop()
+        }
+    }
 
 
     DisposableEffect(key1 = Unit) {

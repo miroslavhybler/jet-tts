@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 
@@ -33,6 +33,7 @@ fun rememberTtsClient(
 ): TtsClient {
     val context = LocalContext.current
     val isInspection = LocalInspectionMode.current
+    val currentOnInitialized = rememberUpdatedState(newValue = onInitialized)
 
     if (isInspection) {
         return remember { TtsClientPreview }
@@ -45,13 +46,15 @@ fun rememberTtsClient(
             context = context,
             initialHighlightMode = highlightMode,
             initialTapNavigationBehavior = tapNavigationBehavior,
-            onInitialized = onInitialized,
+            onInitialized = { client ->
+                currentOnInitialized.value(client)
+            },
             coroutineScope = coroutineScope,
-            isUsingResume=isUsingResume,
+            isUsingResume = isUsingResume,
         )
     }
 
-    DisposableEffect(key1 = Unit) {
+    DisposableEffect(key1 = client) {
         onDispose {
             client.release()
         }

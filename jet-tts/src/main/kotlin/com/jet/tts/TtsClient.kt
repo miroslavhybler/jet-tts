@@ -297,9 +297,11 @@ public abstract class TtsClient internal constructor() {
 
     /**
      * Restores state of [TtsClient] from saved [TtsState] or initializes client with new one.
+     * Usually called by [TtsLifecycleAwareEffect]. Call directly when utterances are added to an
+     * existing [TtsState] after the lifecycle effect has already resumed.
      * @since 1.0.0
      */
-    internal abstract fun initWithState(stateHolder: TtsState): Unit
+    public abstract fun initWithState(stateHolder: TtsState): Unit
 
 
     /**

@@ -32,4 +32,22 @@ class ExampleUnitTest {
         assertEquals(original.currentIndexThreshold, updated.currentIndexThreshold)
         assertEquals("updated", updated.content)
     }
+
+    @Test
+    fun clear_resets_progress_and_utterances() {
+        val state = TtsState()
+        state["first"] = "one"
+        state.utteranceId = "first"
+        state.startIndex = 4
+        state.endIndex = 8
+        state.isSpeaking = true
+
+        state.clear()
+
+        assertEquals("", state.utteranceId)
+        assertEquals(0, state.startIndex)
+        assertEquals(0, state.endIndex)
+        assertEquals(false, state.isSpeaking)
+        assertEquals(0, state.size)
+    }
 }
