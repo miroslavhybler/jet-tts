@@ -16,9 +16,11 @@ import androidx.compose.ui.platform.LocalInspectionMode
 /**
  * @param highlightMode Specifies how the text it [com.jet.tts.TextTts] will be highlighted.
  * @param onInitialized Callback to be called when [TextToSpeech] is initialized for further
+ * configuration, for example setting its language.
  * @param isUsingResume True when you want [TtsClient] to support a "resume" function allowing to
  * resume speech instead of being spoken from beginning.
- * configuration (for example setting language).
+ * @param useWarmUp When true, performs an inaudible synthesis after initialization and before
+ * queued client operations are executed.
  * @author Miroslav Hýbler <br>
  * created on 04.02.2025
  * @since 1.0.0
@@ -30,6 +32,7 @@ fun rememberTtsClient(
     tapNavigationBehavior: TtsClient.TapNavigationBehavior = TtsClient.TapNavigationBehavior.DISABLED,
     onInitialized: (TtsClient) -> Unit = {},
     isUsingResume: Boolean = true,
+    useWarmUp: Boolean = false,
 ): TtsClient {
     val context = LocalContext.current
     val isInspection = LocalInspectionMode.current
@@ -51,6 +54,7 @@ fun rememberTtsClient(
             },
             coroutineScope = coroutineScope,
             isUsingResume = isUsingResume,
+            useWarmUp = useWarmUp,
         )
     }
 

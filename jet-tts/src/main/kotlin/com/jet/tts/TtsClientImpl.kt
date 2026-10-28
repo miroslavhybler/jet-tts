@@ -54,6 +54,8 @@ import java.util.Locale
  * @param coroutineScope [CoroutineScope] used for waiting until TTS engine is initialized.
  * @param isUsingResume True when you want [TtsClient] to support a "resume" function allowing to
  * resume speech instead of being spoken from beginning.
+ * @param useWarmUp When true, performs an inaudible synthesis after initialization and before
+ * queued client operations are executed.
  * @author Miroslav Hýbler <br>
  * created on 04.02.2025
  * @since 1.0.0
@@ -67,7 +69,14 @@ internal class TtsClientImpl internal constructor(
     private val onInitialized: (TtsClient) -> Unit = {},
     private val coroutineScope: CoroutineScope,
     @Deprecated(message = "Will be true by default") private val isUsingResume: Boolean = true,
+    private val useWarmUp: Boolean = false,
 ) : TtsClient() {
+
+
+    private companion object {
+        private const val WARM_UP_UTTERANCE_ID: String = "com.jet.tts.WARM_UP"
+        private const val WARM_UP_TEXT: String = "warm up"
+    }
 
 
     /**
@@ -91,7 +100,11 @@ internal class TtsClientImpl internal constructor(
                 try {
                     onInitialized(this@TtsClientImpl)
                 } finally {
-                    initDeferred.complete(value = true)
+                    if (useWarmUp) {
+                        warmUp()
+                    } else {
+                        initDeferred.complete(value = true)
+                    }
                 }
             }
 
@@ -126,6 +139,8 @@ internal class TtsClientImpl internal constructor(
                 end: Int,
                 frame: Int,
             ) {
+                if (utteranceId == WARM_UP_UTTERANCE_ID) return
+
                 val utterance = contentMap[utteranceId] ?: return
                 currentStartIndex = start
                 currentEndIndex = end
@@ -147,6 +162,8 @@ internal class TtsClientImpl internal constructor(
              * Called when new utterance with id [utteranceId] starts.
              */
             override fun onStart(utteranceId: String) {
+                if (utteranceId == WARM_UP_UTTERANCE_ID) return
+
                 Log.d("TtsClient", "onStart: $utteranceId")
                 currentUtteranceId = utteranceId
                 mUtteranceRange.value = UtteranceProgress(
@@ -162,6 +179,12 @@ internal class TtsClientImpl internal constructor(
              * Called when utterance with id [utteranceId] ends.
              */
             override fun onDone(utteranceId: String) {
+                if (utteranceId == WARM_UP_UTTERANCE_ID) {
+                    Log.d("TtsClient", "TTS warm-up completed")
+                    finishWarmUp()
+                    return
+                }
+
                 Log.d("TtsClient", "onDone: $utteranceId")
                 if (!isUsingResume && contentMap.contains(key = utteranceId)) {
                     contentMap.remove(key = utteranceId)
@@ -175,8 +198,22 @@ internal class TtsClientImpl internal constructor(
              * Called when utterance with id [utteranceId] fails.
              */
             override fun onError(utteranceId: String?) {
+                if (utteranceId == WARM_UP_UTTERANCE_ID) {
+                    Log.w("TtsClient", "TTS warm-up failed")
+                    finishWarmUp()
+                    return
+                }
+
                 Log.w("TtsClient", "onError: $utteranceId")
                 isSpeaking = false
+            }
+
+
+            override fun onStop(utteranceId: String?, interrupted: Boolean) {
+                if (utteranceId == WARM_UP_UTTERANCE_ID) {
+                    Log.d("TtsClient", "TTS warm-up stopped")
+                    finishWarmUp()
+                }
             }
         }
 
@@ -627,6 +664,36 @@ internal class TtsClientImpl internal constructor(
             return
         }
         tts.language = language
+    }
+
+
+    /**
+     * Primes the configured TTS voice with an inaudible synthesis request. Client operations remain
+     * suspended on [initDeferred] until the request completes or fails.
+     */
+    private fun warmUp() {
+        val params = Bundle().apply {
+            putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, 0f)
+        }
+        val result = tts.speak(
+            WARM_UP_TEXT,
+            TextToSpeech.QUEUE_FLUSH,
+            params,
+            WARM_UP_UTTERANCE_ID,
+        )
+
+        if (result != TextToSpeech.SUCCESS) {
+            Log.w("TtsClient", "Unable to queue TTS warm-up")
+            finishWarmUp()
+        }
+    }
+
+
+    /**
+     * Releases operations waiting for initialization without exposing warm-up as spoken state.
+     */
+    private fun finishWarmUp() {
+        initDeferred.complete(value = true)
     }
 
 
