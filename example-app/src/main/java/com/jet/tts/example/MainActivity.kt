@@ -50,6 +50,7 @@ class MainActivity : ComponentActivity() {
                     ttsClient.setLanguage(language = Locale.US)
                 },
                 isUsingResume = true,
+                useWarmUp = true,
             )
 
             JetTtsExampleTheme {
